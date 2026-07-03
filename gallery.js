@@ -1,44 +1,51 @@
 window.cgiSelectMode = false;
 window.cgiSelected = new Set();
 
-window.addEventListener('load', function() {
-  try {
-    var isAlbumView = window.location.href.indexOf('album-view') > -1;
-    if (isAlbumView) return;
-    var stream = document.querySelector('.photonic-smug-stream');
-    if (!stream) return;
-    var filterDiv = document.createElement('div');
-    filterDiv.id = 'gallery-filters';
-    filterDiv.style.cssText = 'display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;';
-    var yearSelect = document.createElement('select');
-    yearSelect.id = 'filter-year';
-    var allYearsOpt = document.createElement('option');
-    allYearsOpt.value = 'all';
-    allYearsOpt.textContent = 'All Years';
-    yearSelect.appendChild(allYearsOpt);
-    var divSelect = document.createElement('select');
-    divSelect.id = 'filter-division';
-    ['All Divisions','Main Camp','Temimim'].forEach(function(opt) {
-      var o = document.createElement('option');
-      o.value = opt === 'All Divisions' ? 'all' : opt;
-      o.textContent = opt;
-      divSelect.appendChild(o);
-    });
-    var weekSelect = document.createElement('select');
-    weekSelect.id = 'filter-week';
-    var allWeeksOpt = document.createElement('option');
-    allWeeksOpt.value = 'all';
-    allWeeksOpt.textContent = 'All Weeks';
-    weekSelect.appendChild(allWeeksOpt);
-    yearSelect.addEventListener('change', window.filterGallery);
-    divSelect.addEventListener('change', window.filterGallery);
-    weekSelect.addEventListener('change', window.filterGallery);
-    filterDiv.appendChild(yearSelect);
-    filterDiv.appendChild(divSelect);
-    filterDiv.appendChild(weekSelect);
-    stream.parentNode.insertBefore(filterDiv, stream);
-  } catch(e) {}
-});
+function cgiInsertFilters() {
+  if (window.location.href.indexOf('album-view') > -1) return true;
+  if (document.getElementById('gallery-filters')) return true;
+  var stream = document.querySelector('.photonic-smug-stream');
+  if (!stream) return false;
+  var filterDiv = document.createElement('div');
+  filterDiv.id = 'gallery-filters';
+  filterDiv.style.cssText = 'display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;';
+  var yearSelect = document.createElement('select');
+  yearSelect.id = 'filter-year';
+  var allYearsOpt = document.createElement('option');
+  allYearsOpt.value = 'all';
+  allYearsOpt.textContent = 'All Years';
+  yearSelect.appendChild(allYearsOpt);
+  var divSelect = document.createElement('select');
+  divSelect.id = 'filter-division';
+  ['All Divisions','Main Camp','Temimim'].forEach(function(opt) {
+    var o = document.createElement('option');
+    o.value = opt === 'All Divisions' ? 'all' : opt;
+    o.textContent = opt;
+    divSelect.appendChild(o);
+  });
+  var weekSelect = document.createElement('select');
+  weekSelect.id = 'filter-week';
+  var allWeeksOpt = document.createElement('option');
+  allWeeksOpt.value = 'all';
+  allWeeksOpt.textContent = 'All Weeks';
+  weekSelect.appendChild(allWeeksOpt);
+  yearSelect.addEventListener('change', window.filterGallery);
+  divSelect.addEventListener('change', window.filterGallery);
+  weekSelect.addEventListener('change', window.filterGallery);
+  filterDiv.appendChild(yearSelect);
+  filterDiv.appendChild(divSelect);
+  filterDiv.appendChild(weekSelect);
+  stream.parentNode.insertBefore(filterDiv, stream);
+  return true;
+}
+
+(function() {
+  var attempts = 0;
+  var poll = setInterval(function() {
+    attempts++;
+    if (cgiInsertFilters() || attempts > 40) clearInterval(poll);
+  }, 250);
+})();
 
 window.filterGallery = function() {
   var year = document.getElementById('filter-year') ? document.getElementById('filter-year').value : 'all';
@@ -325,55 +332,18 @@ function cgiUpdateBatchBar() {
   bar.appendChild(clearBtn);
 }
 
-function cgiLoadJSZip(cb) {
-  if (window.JSZip) { cb(true); return; }
-  var s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-  s.onload = function() { cb(true); };
-  s.onerror = function() { cb(false); };
-  document.head.appendChild(s);
-}
-
 function cgiBatchDownload(code, label) {
   var items = Array.from(window.cgiSelected);
   if (!items.length) return;
-  cgiLoadJSZip(function(ok) {
-    if (!ok || !window.JSZip) {
-      items.forEach(function(src, i) {
-        setTimeout(function() {
-          var a = document.createElement('a');
-          a.href = cgiProxyUrl(cgiSizedUrl(src, code));
-          a.download = 'CGI-' + label + '-' + (i + 1) + '.jpg';
-          a.target = '_blank';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }, i * 400);
-      });
-      return;
-    }
-    var zip = new JSZip();
-    var done = 0;
-    items.forEach(function(src, i) {
-      fetch(cgiProxyUrl(cgiSizedUrl(src, code))).then(function(r) { return r.blob(); })
-        .then(function(blob) { zip.file('CGI-' + label + '-' + (i + 1) + '.jpg', blob); })
-        .catch(function() {})
-        .finally(function() {
-          done++;
-          if (done === items.length) {
-            zip.generateAsync({ type: 'blob' }).then(function(content) {
-              var a = document.createElement('a');
-              var u = URL.createObjectURL(content);
-              a.href = u;
-              a.download = 'CGI-Photos-' + label + '.zip';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(u);
-            });
-          }
-        });
-    });
+  items.forEach(function(src, i) {
+    setTimeout(function() {
+      var a = document.createElement('a');
+      a.href = cgiProxyUrl(cgiSizedUrl(src, code));
+      a.download = 'CGI-' + label + '-' + (i + 1) + '.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, i * 500);
   });
 }
 
