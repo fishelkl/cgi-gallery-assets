@@ -228,6 +228,9 @@ h1.edgtf-page-title {
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
+}
+
+.photonic-standard-layout:not(.photonic-level-2-container) {
   opacity: 0 !important;
   transition: opacity 0.25s ease !important;
 }
