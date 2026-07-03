@@ -1,0 +1,510 @@
+@import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap');
+
+.recent-facebook-posts .rfbp-post {
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+.recent-facebook-posts .rfbp-post {
+  background: #f4f4f4;
+  padding: 15px;
+  border: 3px solid #fff;
+  overflow: hidden;
+  margin-bottom: 1px;
+}
+.recent-facebook-posts .rfbp-text {
+  font-size: 13px;
+  line-height: 130%;
+}
+.recent-facebook-posts .rfbp-text p {
+  padding-bottom: 14px;
+}
+
+/* =====================
+   GALLERY PAGE - Album Grid
+   ===================== */
+
+.photonic-level-2-container {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 10px !important;
+  width: 100% !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  columns: unset !important;
+  column-count: unset !important;
+  column-gap: unset !important;
+}
+
+.photonic-level-2-container.photonic-standard-layout {
+  columns: unset !important;
+  column-count: unset !important;
+  column-gap: unset !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+.photonic-level-2.photonic-thumb {
+  width: 100% !important;
+  position: relative !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  aspect-ratio: 4 / 3 !important;
+  margin: 0 !important;
+  background: #222 !important;
+  cursor: pointer !important;
+  display: block;
+}
+
+.photonic-level-2.photonic-thumb a {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+.photonic-level-2.photonic-thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  opacity: 1 !important;
+  transition: transform 0.4s ease !important;
+}
+
+.photonic-level-2.photonic-thumb:hover img {
+  transform: scale(1.06) !important;
+}
+
+.photonic-level-2.photonic-thumb::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 60% !important;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.photonic-title-info,
+.title-display-hover-slideup-show .photonic-title-info,
+.title-display-hover-slideup-show figure:hover .photonic-title-info {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 50px !important;
+  background: none !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  padding: 0 18px 18px !important;
+  z-index: 2 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.photonic-slideshow.title-display-hover-slideup-show li .photonic-title,
+.title-display-hover-slideup-show a .photonic-title,
+.title-display-hover-slideup-show .photonic-title,
+.title-display-hover-slideup-show-stick a .photonic-title,
+.photonic-album-title.photonic-title,
+.photonic-title-info .photonic-title,
+.photonic-thumb .photonic-title,
+.photonic-level-2 .photonic-title,
+figure.photonic-thumb .photonic-title,
+html body .photonic-title {
+  font-family: 'Teko', sans-serif !important;
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.5px !important;
+  line-height: 1.1 !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6) !important;
+  margin: 0 !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  word-spacing: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+  width: 100% !important;
+  display: block !important;
+  text-align: left !important;
+}
+
+.photonic-album-desc.photonic-desc,
+html body .photonic-desc {
+  color: rgba(255,255,255,0.75) !important;
+  font-family: 'Teko', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  margin: 2px 0 0 0 !important;
+  background: none !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+.photonic-thumb img.fade-in {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* =====================
+   PAGE TITLE
+   ===================== */
+
+.edgtf-title-holder h1,
+.edgtf-title-holder .edgtf-page-title,
+h1.edgtf-page-title {
+  font-size: 72px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 4px !important;
+}
+
+/* =====================
+   CONTAINER WIDTH
+   ===================== */
+
+.edgtf-content .edgtf-container,
+.edgtf-content .edgtf-container-inner {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.photonic-smug-stream,
+.photonic-stream {
+  width: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* =====================
+   ALBUM VIEW - Hide Header
+   ===================== */
+
+.photonic-object-header,
+.photonic-smug-album-header,
+.photonic-album-header,
+.photonic-stream-header {
+  display: none !important;
+}
+
+/* =====================
+   ALBUM VIEW PAGE - Masonry Layout (JS controlled)
+   ===================== */
+
+.photonic-standard-layout {
+  position: relative !important;
+  width: 100% !important;
+  display: block !important;
+  columns: unset !important;
+  column-count: unset !important;
+  column-gap: unset !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  opacity: 0 !important;
+  transition: opacity 0.25s ease !important;
+}
+
+.photonic-standard-layout.cgi-masonry-ready {
+  opacity: 1 !important;
+}
+
+.photonic-standard-layout figure {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  display: block !important;
+  box-sizing: border-box !important;
+}
+
+.photonic-standard-layout figure img {
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  border-radius: 10px !important;
+  transition: transform 0.3s ease !important;
+}
+
+.photonic-standard-layout figure:hover img {
+  transform: scale(1.03) !important;
+}
+
+/* =====================
+   ALBUM VIEW - Multi-Select Download
+   ===================== */
+
+#cgi-select-toggle {
+  display: inline-block !important;
+  background: #a8c8e8 !important;
+  color: #2d5986 !important;
+  font-family: 'Teko', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  padding: 12px 40px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  transition: background 0.3s ease !important;
+  margin: 0 0 20px 12px !important;
+}
+
+#cgi-select-toggle:hover,
+#cgi-select-toggle.cgi-active {
+  background: #2d5986 !important;
+  color: #fff !important;
+}
+
+.cgi-select-box {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: rgba(0,0,0,0.35);
+  z-index: 5;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+body.cgi-select-active .photonic-standard-layout figure .cgi-select-box {
+  display: block;
+}
+
+body.cgi-select-active .photonic-standard-layout figure {
+  cursor: pointer;
+}
+
+body.cgi-select-active .photonic-standard-layout figure a {
+  pointer-events: none !important;
+}
+
+.photonic-standard-layout figure.cgi-selected .cgi-select-box {
+  background: #2d5986;
+  border-color: #a8c8e8;
+}
+
+.photonic-standard-layout figure.cgi-selected .cgi-select-box::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  width: 6px;
+  height: 12px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.photonic-standard-layout figure.cgi-selected img {
+  outline: 3px solid #2d5986;
+  outline-offset: -3px;
+}
+
+#cgi-batch-dl {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  flex-wrap: wrap;
+}
+
+.cgi-batch-count {
+  font-family: 'Teko', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d5986;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cgi-batch-btn {
+  background: #a8c8e8;
+  color: #2d5986;
+  font-family: 'Teko', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.cgi-batch-btn:hover {
+  background: #2d5986;
+  color: #fff;
+}
+
+.cgi-batch-clear {
+  color: #a33;
+  font-family: 'Teko', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* =====================
+   LOAD MORE BUTTON
+   ===================== */
+
+a.photonic-more-button.photonic-more-dynamic {
+  display: block !important;
+  width: fit-content !important;
+  background: #a8c8e8 !important;
+  color: #2d5986 !important;
+  font-family: 'Teko', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  padding: 12px 40px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  margin: 20px auto !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  transition: background 0.3s ease !important;
+}
+
+a.photonic-more-button.photonic-more-dynamic:hover {
+  background: #2d5986 !important;
+  color: #fff !important;
+}
+
+/* =====================
+   FILTER DROPDOWNS
+   ===================== */
+
+#filter-year,
+#filter-division,
+#filter-week {
+  font-family: Teko, sans-serif !important;
+  font-size: 18px !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  border: 2px solid #2d5986 !important;
+  background: #fff !important;
+  color: #2d5986 !important;
+  cursor: pointer !important;
+  min-width: 160px !important;
+  flex: 1 !important;
+}
+
+/* =====================
+   MOBILE RESPONSIVE
+   ===================== */
+
+@media (max-width: 1024px) {
+  .photonic-level-2-container,
+  .photonic-level-2-container.photonic-standard-layout {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .photonic-level-2-container,
+  .photonic-level-2-container.photonic-standard-layout {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    columns: unset !important;
+  }
+
+  .edgtf-content .edgtf-container,
+  .edgtf-content .edgtf-container-inner {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  #gallery-filters {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  #filter-year,
+  #filter-division,
+  #filter-week {
+    width: 100% !important;
+    min-width: unset !important;
+    box-sizing: border-box !important;
+  }
+
+  #cgi-dl-btn {
+    bottom: 15px !important;
+    right: 15px !important;
+  }
+
+  #cgi-batch-dl {
+    bottom: 15px !important;
+    right: 15px !important;
+    left: 15px !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .photonic-level-2-container,
+  .photonic-level-2-container.photonic-standard-layout {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    columns: unset !important;
+  }
+}
+
+#bp_caption, #bp_count, #bp_x {
+  display: none !important;
+}
+
+figure.photonic-level-2.photonic-thumb[style*="display: none"] {
+  display: none !important;
+}
