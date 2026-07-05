@@ -8,7 +8,7 @@ function cgiInsertFilters() {
   if (!stream) return false;
   var filterDiv = document.createElement('div');
   filterDiv.id = 'gallery-filters';
-  filterDiv.style.cssText = 'display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;';
+  filterDiv.style.cssText = 'display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;';
   var yearSelect = document.createElement('select');
   yearSelect.id = 'filter-year';
   var allYearsOpt = document.createElement('option');
@@ -29,14 +29,33 @@ function cgiInsertFilters() {
   allWeeksOpt.value = 'all';
   allWeeksOpt.textContent = 'All Weeks';
   weekSelect.appendChild(allWeeksOpt);
-  yearSelect.addEventListener('change', window.filterGallery);
-  divSelect.addEventListener('change', window.filterGallery);
-  weekSelect.addEventListener('change', window.filterGallery);
+  yearSelect.addEventListener('change', window.cgiFilterGallery);
+  divSelect.addEventListener('change', window.cgiFilterGallery);
+  weekSelect.addEventListener('change', window.cgiFilterGallery);
   filterDiv.appendChild(yearSelect);
   filterDiv.appendChild(divSelect);
   filterDiv.appendChild(weekSelect);
+
+  var sortBtn = document.createElement('a');
+  sortBtn.id = 'gallery-sort-toggle';
+  sortBtn.href = '#';
+  sortBtn.textContent = 'Oldest First';
+  sortBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    cgiToggleAlbumSort();
+    sortBtn.textContent = sortBtn.textContent === 'Oldest First' ? 'Newest First' : 'Oldest First';
+  });
+  filterDiv.appendChild(sortBtn);
+
   stream.parentNode.insertBefore(filterDiv, stream);
   return true;
+}
+
+function cgiToggleAlbumSort() {
+  var container = document.querySelector('.photonic-level-2-container');
+  if (!container) return;
+  var thumbs = Array.from(container.querySelectorAll(':scope > .photonic-level-2.photonic-thumb'));
+  thumbs.reverse().forEach(function(t) { container.appendChild(t); });
 }
 
 (function() {
@@ -47,7 +66,7 @@ function cgiInsertFilters() {
   }, 250);
 })();
 
-window.filterGallery = function() {
+window.cgiFilterGallery = function() {
   var year = document.getElementById('filter-year') ? document.getElementById('filter-year').value : 'all';
   var division = document.getElementById('filter-division') ? document.getElementById('filter-division').value : 'all';
   var week = document.getElementById('filter-week') ? document.getElementById('filter-week').value : 'all';
@@ -63,7 +82,7 @@ window.filterGallery = function() {
   });
 };
 
-window.populateFilters = function() {
+window.cgiPopulateFilters = function() {
   var weeks = [], years = [];
   document.querySelectorAll('.photonic-level-2.photonic-thumb').forEach(function(thumb) {
     var desc = thumb.querySelector('.custom-desc');
@@ -86,7 +105,7 @@ window.populateFilters = function() {
   if (yearSel && years.length) { while(yearSel.options.length>1) yearSel.remove(1); years.forEach(function(y){ var o=document.createElement('option'); o.value=y; o.textContent=y; yearSel.appendChild(o); }); }
 };
 
-window.fixGallery = function() {
+window.cgiFixGallery = function() {
   if (window.location.href.indexOf('album-view') > -1) return;
   var isMobile = window.innerWidth < 768;
   var container = document.querySelector('.photonic-level-2-container');
@@ -114,10 +133,10 @@ window.fixGallery = function() {
       }
     }
   });
-  window.populateFilters();
+  window.cgiPopulateFilters();
 };
 
-window.masonryLayout = function() {
+window.cgiMasonryLayout = function() {
   if (window.location.href.indexOf('album-view') === -1) return;
   var container = document.querySelector('.photonic-standard-layout');
   if (!container || !container.offsetWidth) return;
@@ -384,9 +403,9 @@ function cgiBatchDownload(code, label) {
   });
 }
 
-setTimeout(window.fixGallery,500);setTimeout(window.fixGallery,1500);setTimeout(window.fixGallery,3000);
-setTimeout(window.masonryLayout,300);
-window.addEventListener('resize',window.masonryLayout);
+setTimeout(window.cgiFixGallery,500);setTimeout(window.cgiFixGallery,1500);setTimeout(window.cgiFixGallery,3000);
+setTimeout(window.cgiMasonryLayout,300);
+window.addEventListener('resize',window.cgiMasonryLayout);
 setTimeout(cgiInsertSelectToggle, 500);
 setTimeout(cgiSetupThumbSelection, 600);
 setTimeout(cgiSetupThumbSelection, 1600);
