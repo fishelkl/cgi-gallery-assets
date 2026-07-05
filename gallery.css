@@ -511,3 +511,24 @@ a.photonic-more-button.photonic-more-dynamic:hover {
 figure.photonic-level-2.photonic-thumb[style*="display: none"] {
   display: none !important;
 }
+#gallery-sort-toggle {
+  display: inline-block !important;
+  background: #a8c8e8 !important;
+  color: #2d5986 !important;
+  font-family: 'Teko', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  padding: 8px 20px !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: background 0.3s ease !important;
+  white-space: nowrap !important;
+}
+
+#gallery-sort-toggle:hover {
+  background: #2d5986 !important;
+  color: #fff !important;
+}
