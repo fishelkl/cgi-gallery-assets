@@ -1,124 +1,26 @@
 window.cgiSelectMode = false;
 window.cgiSelected = new Set();
+window.cgiVisibleCount = 12;
+window.cgiSortDirection = 'newest';
+window.cgiAlbumOrder = [];
 
-function cgiInsertFilters() {
-  if (window.location.href.indexOf('album-view') > -1) return true;
-  if (document.getElementById('gallery-filters')) return true;
-  var stream = document.querySelector('.photonic-smug-stream');
-  if (!stream) return false;
-  var filterDiv = document.createElement('div');
-  filterDiv.id = 'gallery-filters';
-  filterDiv.style.cssText = 'display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;';
-  var yearSelect = document.createElement('select');
-  yearSelect.id = 'filter-year';
-  var allYearsOpt = document.createElement('option');
-  allYearsOpt.value = 'all';
-  allYearsOpt.textContent = 'All Years';
-  yearSelect.appendChild(allYearsOpt);
-  var divSelect = document.createElement('select');
-  divSelect.id = 'filter-division';
-  ['All Divisions','Main Camp','Temimim'].forEach(function(opt) {
-    var o = document.createElement('option');
-    o.value = opt === 'All Divisions' ? 'all' : opt;
-    o.textContent = opt;
-    divSelect.appendChild(o);
-  });
-  var weekSelect = document.createElement('select');
-  weekSelect.id = 'filter-week';
-  var allWeeksOpt = document.createElement('option');
-  allWeeksOpt.value = 'all';
-  allWeeksOpt.textContent = 'All Weeks';
-  weekSelect.appendChild(allWeeksOpt);
-  yearSelect.addEventListener('change', window.cgiFilterGallery);
-  divSelect.addEventListener('change', window.cgiFilterGallery);
-  weekSelect.addEventListener('change', window.cgiFilterGallery);
-  filterDiv.appendChild(yearSelect);
-  filterDiv.appendChild(divSelect);
-  filterDiv.appendChild(weekSelect);
-
-  var sortBtn = document.createElement('a');
-  sortBtn.id = 'gallery-sort-toggle';
-  sortBtn.href = '#';
-  sortBtn.textContent = 'Oldest First';
-  sortBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    cgiToggleAlbumSort();
-    sortBtn.textContent = sortBtn.textContent === 'Oldest First' ? 'Newest First' : 'Oldest First';
-  });
-  filterDiv.appendChild(sortBtn);
-
-  stream.parentNode.insertBefore(filterDiv, stream);
-  return true;
+function cgiEnsureAlbumOrderInit(container) {
+  if (!window.cgiAlbumOrder.length) {
+    window.cgiAlbumOrder = Array.from(container.querySelectorAll(':scope > .photonic-level-2.photonic-thumb'));
+  }
 }
 
-function cgiToggleAlbumSort() {
-  var container = document.querySelector('.photonic-level-2-container');
-  if (!container) return;
-  var thumbs = Array.from(container.querySelectorAll(':scope > .photonic-level-2.photonic-thumb'));
-  thumbs.reverse().forEach(function(t) { container.appendChild(t); });
+function cgiRenderAlbumOrder(container) {
+  var order = window.cgiAlbumOrder;
+  var display = window.cgiSortDirection === 'oldest' ? order.slice().reverse() : order;
+  display.forEach(function(t) { container.appendChild(t); });
 }
 
-function cgiLoadMoreAlbums(container, btn) {
-  var query = container.getAttribute('data-photonic-query');
-  var provider = container.getAttribute('data-photonic-platform');
-  if (!query || !provider) { btn.style.display = 'none'; return; }
-  btn.textContent = 'Loading...';
-  fetch('https://cgiflorida.com/boys/wp-admin/admin-ajax.php', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: 'action=photonic_load_more&provider=' + encodeURIComponent(provider) + '&query=' + encodeURIComponent(query)
-  }).then(function(r) { return r.text(); }).then(function(html) {
-    var scratch = document.createElement('div');
-    scratch.innerHTML = html;
-    var newThumbs = scratch.querySelectorAll('.photonic-level-2.photonic-thumb');
-    newThumbs.forEach(function(t) { container.appendChild(t); });
-    var newContainer = scratch.querySelector('.photonic-level-2-container, .photonic-level-1-container');
-    var nq = newContainer ? newContainer.getAttribute('data-photonic-query') : null;
-    if (newThumbs.length && nq) {
-      container.setAttribute('data-photonic-query', nq);
-      btn.textContent = 'Load More';
-    } else {
-      btn.style.display = 'none';
-    }
-    window.cgiFixGallery();
-  }).catch(function() {
-    btn.textContent = 'Load More';
-  });
-}
-
-function cgiInsertLoadMoreButton() {
-  if (window.location.href.indexOf('album-view') > -1) return true;
-  if (document.getElementById('cgi-load-more')) return true;
-  var container = document.querySelector('.photonic-level-2-container');
-  if (!container) return false;
-  if (!container.getAttribute('data-photonic-query')) return false;
-  var btn = document.createElement('a');
-  btn.id = 'cgi-load-more';
-  btn.href = '#';
-  btn.className = 'photonic-more-button photonic-more-dynamic';
-  btn.textContent = 'Load More';
-  btn.addEventListener('click', function(e) {
-    e.preventDefault();
-    cgiLoadMoreAlbums(container, btn);
-  });
-  container.parentNode.appendChild(btn);
-  return true;
-}
-
-(function() {
-  var attempts = 0;
-  var poll = setInterval(function() {
-    attempts++;
-    var f = cgiInsertFilters();
-    var m = cgiInsertLoadMoreButton();
-    if ((f && m) || attempts > 40) clearInterval(poll);
-  }, 250);
-})();
-
-window.cgiFilterGallery = function() {
+function cgiUpdateVisibility() {
   var year = document.getElementById('filter-year') ? document.getElementById('filter-year').value : 'all';
   var division = document.getElementById('filter-division') ? document.getElementById('filter-division').value : 'all';
   var week = document.getElementById('filter-week') ? document.getElementById('filter-week').value : 'all';
+  var shown = 0;
   document.querySelectorAll('.photonic-level-2.photonic-thumb').forEach(function(thumb) {
     var desc = thumb.querySelector('.custom-desc');
     var text = desc ? desc.textContent : '';
@@ -127,8 +29,98 @@ window.cgiFilterGallery = function() {
     var yearMatch = year === 'all' || src.indexOf('/' + year + '/') > -1;
     var divMatch = division === 'all' || text.indexOf(division) > -1;
     var weekMatch = week === 'all' || text.indexOf(week) > -1;
-    thumb.style.display = (yearMatch && divMatch && weekMatch) ? 'block' : 'none';
+    var filterMatch = yearMatch && divMatch && weekMatch;
+    if (filterMatch && shown < window.cgiVisibleCount) {
+      thumb.style.display = 'block';
+      shown++;
+    } else {
+      thumb.style.display = 'none';
+    }
   });
+  var container = document.querySelector('.photonic-level-2-container');
+  var btn = document.getElementById('cgi-load-more');
+  if (btn && container) {
+    var total = container.querySelectorAll(':scope > .photonic-level-2.photonic-thumb').length;
+    var moreAvailable = total > window.cgiVisibleCount || !!container.getAttribute('data-photonic-query');
+    btn.style.display = moreAvailable ? '' : 'none';
+  }
+}
+
+function cgiInsertFilters() {
+  if (window.location.href.indexOf('album-view') > -1) return true;
+  if (document.getElementById('gallery-filters')) return true;
+  var stream = document.querySelector('.photonic-smug-stream');
+  if (!stream) return false;
+
+  function mkField(labelText, el) {
+    var field = document.createElement('div');
+    field.className = 'gallery-filter-field';
+    var label = document.createElement('label');
+    label.className = 'gallery-filter-label';
+    label.textContent = labelText;
+    field.appendChild(label);
+    field.appendChild(el);
+    return field;
+  }
+
+  var filterDiv = document.createElement('div');
+  filterDiv.id = 'gallery-filters';
+
+  var yearSelect = document.createElement('select');
+  yearSelect.id = 'filter-year';
+  var allYearsOpt = document.createElement('option');
+  allYearsOpt.value = 'all';
+  allYearsOpt.textContent = 'All Years';
+  yearSelect.appendChild(allYearsOpt);
+
+  var divSelect = document.createElement('select');
+  divSelect.id = 'filter-division';
+  ['All Divisions','Main Camp','Temimim'].forEach(function(opt) {
+    var o = document.createElement('option');
+    o.value = opt === 'All Divisions' ? 'all' : opt;
+    o.textContent = opt;
+    divSelect.appendChild(o);
+  });
+
+  var weekSelect = document.createElement('select');
+  weekSelect.id = 'filter-week';
+  var allWeeksOpt = document.createElement('option');
+  allWeeksOpt.value = 'all';
+  allWeeksOpt.textContent = 'All Weeks';
+  weekSelect.appendChild(allWeeksOpt);
+
+  var sortSelect = document.createElement('select');
+  sortSelect.id = 'gallery-sort-select';
+  [['newest','Newest First'],['oldest','Oldest First']].forEach(function(pair) {
+    var o = document.createElement('option');
+    o.value = pair[0];
+    o.textContent = pair[1];
+    sortSelect.appendChild(o);
+  });
+
+  yearSelect.addEventListener('change', function() { window.cgiVisibleCount = 12; window.cgiFilterGallery(); });
+  divSelect.addEventListener('change', function() { window.cgiVisibleCount = 12; window.cgiFilterGallery(); });
+  weekSelect.addEventListener('change', function() { window.cgiVisibleCount = 12; window.cgiFilterGallery(); });
+  sortSelect.addEventListener('change', function() {
+    window.cgiSortDirection = sortSelect.value;
+    var container = document.querySelector('.photonic-level-2-container');
+    if (!container) return;
+    cgiEnsureAlbumOrderInit(container);
+    cgiRenderAlbumOrder(container);
+    cgiUpdateVisibility();
+  });
+
+  filterDiv.appendChild(mkField('Year', yearSelect));
+  filterDiv.appendChild(mkField('Division', divSelect));
+  filterDiv.appendChild(mkField('Week', weekSelect));
+  filterDiv.appendChild(mkField('Sort', sortSelect));
+
+  stream.parentNode.insertBefore(filterDiv, stream);
+  return true;
+}
+
+window.cgiFilterGallery = function() {
+  cgiUpdateVisibility();
 };
 
 window.cgiPopulateFilters = function() {
@@ -160,7 +152,6 @@ window.cgiFixGallery = function() {
   var container = document.querySelector('.photonic-level-2-container');
   if (container) container.style.cssText = 'display:grid!important;grid-template-columns:' + (isMobile ? '1fr 1fr' : '1fr 1fr 1fr') + ';gap:' + (isMobile ? '8px' : '10px') + ';columns:unset;column-count:unset;width:100%;box-sizing:border-box;';
   document.querySelectorAll('.photonic-level-2.photonic-thumb').forEach(function(thumb) {
-    thumb.style.display = 'block';
     if (thumb.querySelector('.custom-desc')) return;
     var fig = thumb.querySelector('figcaption.photonic-title-info');
     var titleEl = thumb.querySelector('.photonic-title');
@@ -184,6 +175,78 @@ window.cgiFixGallery = function() {
   });
   window.cgiPopulateFilters();
 };
+
+function cgiLoadMoreAlbums(container, btn) {
+  var query = container.getAttribute('data-photonic-query');
+  var provider = container.getAttribute('data-photonic-platform');
+  if (!query || !provider) { btn.style.display = 'none'; return; }
+  btn.textContent = 'Loading...';
+  fetch('https://cgiflorida.com/boys/wp-admin/admin-ajax.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'action=photonic_load_more&provider=' + encodeURIComponent(provider) + '&query=' + encodeURIComponent(query)
+  }).then(function(r) { return r.text(); }).then(function(html) {
+    var scratch = document.createElement('div');
+    scratch.innerHTML = html;
+    var newThumbs = Array.from(scratch.querySelectorAll('.photonic-level-2.photonic-thumb'));
+    newThumbs.forEach(function(t) {
+      container.appendChild(t);
+      window.cgiAlbumOrder.push(t);
+    });
+    var newContainer = scratch.querySelector('.photonic-level-2-container, .photonic-level-1-container');
+    var nq = newContainer ? newContainer.getAttribute('data-photonic-query') : null;
+    if (newThumbs.length && nq) {
+      container.setAttribute('data-photonic-query', nq);
+    } else {
+      container.removeAttribute('data-photonic-query');
+    }
+    cgiRenderAlbumOrder(container);
+    window.cgiFixGallery();
+    cgiUpdateVisibility();
+    btn.textContent = 'Load More';
+  }).catch(function() {
+    btn.textContent = 'Load More';
+  });
+}
+
+function cgiHandleLoadMoreClick(container, btn) {
+  window.cgiVisibleCount += 12;
+  cgiUpdateVisibility();
+  var total = container.querySelectorAll(':scope > .photonic-level-2.photonic-thumb').length;
+  if (total < window.cgiVisibleCount && container.getAttribute('data-photonic-query')) {
+    cgiLoadMoreAlbums(container, btn);
+  }
+}
+
+function cgiInsertLoadMoreButton() {
+  if (window.location.href.indexOf('album-view') > -1) return true;
+  if (document.getElementById('cgi-load-more')) return true;
+  var container = document.querySelector('.photonic-level-2-container');
+  if (!container) return false;
+  cgiEnsureAlbumOrderInit(container);
+  var btn = document.createElement('a');
+  btn.id = 'cgi-load-more';
+  btn.href = '#';
+  btn.className = 'photonic-more-button photonic-more-dynamic';
+  btn.textContent = 'Load More';
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    cgiHandleLoadMoreClick(container, btn);
+  });
+  container.parentNode.appendChild(btn);
+  cgiUpdateVisibility();
+  return true;
+}
+
+(function() {
+  var attempts = 0;
+  var poll = setInterval(function() {
+    attempts++;
+    var f = cgiInsertFilters();
+    var m = cgiInsertLoadMoreButton();
+    if ((f && m) || attempts > 40) clearInterval(poll);
+  }, 250);
+})();
 
 window.cgiMasonryLayout = function() {
   if (window.location.href.indexOf('album-view') === -1) return;
@@ -453,6 +516,7 @@ function cgiBatchDownload(code, label) {
 }
 
 setTimeout(window.cgiFixGallery,500);setTimeout(window.cgiFixGallery,1500);setTimeout(window.cgiFixGallery,3000);
+setTimeout(cgiUpdateVisibility,600);setTimeout(cgiUpdateVisibility,1600);setTimeout(cgiUpdateVisibility,3200);
 setTimeout(window.cgiMasonryLayout,300);
 window.addEventListener('resize',window.cgiMasonryLayout);
 setTimeout(cgiInsertSelectToggle, 500);
