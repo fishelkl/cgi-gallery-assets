@@ -58,11 +58,60 @@ function cgiToggleAlbumSort() {
   thumbs.reverse().forEach(function(t) { container.appendChild(t); });
 }
 
+function cgiLoadMoreAlbums(container, btn) {
+  var query = container.getAttribute('data-photonic-query');
+  var provider = container.getAttribute('data-photonic-platform');
+  if (!query || !provider) { btn.style.display = 'none'; return; }
+  btn.textContent = 'Loading...';
+  fetch('https://cgiflorida.com/boys/wp-admin/admin-ajax.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'action=photonic_load_more&provider=' + encodeURIComponent(provider) + '&query=' + encodeURIComponent(query)
+  }).then(function(r) { return r.text(); }).then(function(html) {
+    var scratch = document.createElement('div');
+    scratch.innerHTML = html;
+    var newThumbs = scratch.querySelectorAll('.photonic-level-2.photonic-thumb');
+    newThumbs.forEach(function(t) { container.appendChild(t); });
+    var newContainer = scratch.querySelector('.photonic-level-2-container, .photonic-level-1-container');
+    var nq = newContainer ? newContainer.getAttribute('data-photonic-query') : null;
+    if (newThumbs.length && nq) {
+      container.setAttribute('data-photonic-query', nq);
+      btn.textContent = 'Load More';
+    } else {
+      btn.style.display = 'none';
+    }
+    window.cgiFixGallery();
+  }).catch(function() {
+    btn.textContent = 'Load More';
+  });
+}
+
+function cgiInsertLoadMoreButton() {
+  if (window.location.href.indexOf('album-view') > -1) return true;
+  if (document.getElementById('cgi-load-more')) return true;
+  var container = document.querySelector('.photonic-level-2-container');
+  if (!container) return false;
+  if (!container.getAttribute('data-photonic-query')) return false;
+  var btn = document.createElement('a');
+  btn.id = 'cgi-load-more';
+  btn.href = '#';
+  btn.className = 'photonic-more-button photonic-more-dynamic';
+  btn.textContent = 'Load More';
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    cgiLoadMoreAlbums(container, btn);
+  });
+  container.parentNode.appendChild(btn);
+  return true;
+}
+
 (function() {
   var attempts = 0;
   var poll = setInterval(function() {
     attempts++;
-    if (cgiInsertFilters() || attempts > 40) clearInterval(poll);
+    var f = cgiInsertFilters();
+    var m = cgiInsertLoadMoreButton();
+    if ((f && m) || attempts > 40) clearInterval(poll);
   }, 250);
 })();
 
