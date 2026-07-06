@@ -426,12 +426,39 @@ a.photonic-more-button.photonic-more-dynamic:hover {
 }
 
 /* =====================
-   FILTER DROPDOWNS
+   FILTER + SORT TOOLBAR
    ===================== */
 
-#filter-year,
-#filter-division,
-#filter-week {
+#gallery-filters {
+  display: flex !important;
+  gap: 20px !important;
+  flex-wrap: wrap !important;
+  align-items: flex-end !important;
+  background: #f4f4f4 !important;
+  border-radius: 10px !important;
+  padding: 16px 20px !important;
+  margin-bottom: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.gallery-filter-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  flex: 1 !important;
+  min-width: 140px !important;
+}
+
+.gallery-filter-label {
+  font-family: 'Teko', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  color: #2d5986 !important;
+}
+
+#gallery-filters select {
   font-family: Teko, sans-serif !important;
   font-size: 18px !important;
   padding: 8px 16px !important;
@@ -440,8 +467,8 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   background: #fff !important;
   color: #2d5986 !important;
   cursor: pointer !important;
-  min-width: 160px !important;
-  flex: 1 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* =====================
@@ -471,15 +498,11 @@ a.photonic-more-button.photonic-more-dynamic:hover {
 
   #gallery-filters {
     flex-direction: column !important;
-    gap: 8px !important;
+    align-items: stretch !important;
   }
 
-  #filter-year,
-  #filter-division,
-  #filter-week {
-    width: 100% !important;
+  .gallery-filter-field {
     min-width: unset !important;
-    box-sizing: border-box !important;
   }
 
   #cgi-dl-btn {
@@ -510,25 +533,4 @@ a.photonic-more-button.photonic-more-dynamic:hover {
 
 figure.photonic-level-2.photonic-thumb[style*="display: none"] {
   display: none !important;
-}
-#gallery-sort-toggle {
-  display: inline-block !important;
-  background: #a8c8e8 !important;
-  color: #2d5986 !important;
-  font-family: 'Teko', sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  letter-spacing: 2px !important;
-  text-transform: uppercase !important;
-  padding: 8px 20px !important;
-  border-radius: 8px !important;
-  text-decoration: none !important;
-  cursor: pointer !important;
-  transition: background 0.3s ease !important;
-  white-space: nowrap !important;
-}
-
-#gallery-sort-toggle:hover {
-  background: #2d5986 !important;
-  color: #fff !important;
 }
