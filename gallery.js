@@ -308,6 +308,22 @@ function cgiProxyUrl(url, filename) {
   return u;
 }
 
+function cgiGetReadableAlbumLink() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var title = params.get('photonic_gallery_title') || '';
+    var img = document.querySelector('.photonic-standard-layout img');
+    var src = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
+    var division = src.indexOf('Main-Camp') > -1 ? 'maincamp' : src.indexOf('Temimim') > -1 ? 'temimim' : '';
+    var wm = src.match(/Week-(\d+)/i);
+    var week = wm ? 'week' + wm[1] : '';
+    var firstWord = title.split(' ')[0] || '';
+    var slug = firstWord.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!division || !week || !slug) return null;
+    return 'https://cgi-photo-proxy.fishelkleinman.workers.dev/CGIFL/' + week + '/' + division + '/' + slug;
+  } catch (e) { return null; }
+}
+
 document.head.appendChild(Object.assign(document.createElement('link'), {rel:'stylesheet', href:'https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap'}));
 
 setTimeout(function(){
@@ -333,10 +349,11 @@ setTimeout(function(){
   shareBtn.addEventListener('mouseout',function(){shareBtn.style.background='#a8c8e8';shareBtn.style.color='#2d5986';});
   shareBtn.addEventListener('click',function(e){
     e.preventDefault();
+    var shareUrl=cgiGetReadableAlbumLink()||window.location.href;
     if(navigator.share){
-      navigator.share({title:document.title,url:window.location.href}).catch(function(){});
+      navigator.share({title:document.title,url:shareUrl}).catch(function(){});
     } else {
-      navigator.clipboard.writeText(window.location.href).then(function(){
+      navigator.clipboard.writeText(shareUrl).then(function(){
         shareBtn.textContent='Copied!';
         setTimeout(function(){shareBtn.textContent='Share';},1500);
       });
