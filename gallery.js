@@ -308,19 +308,6 @@ function cgiProxyUrl(url, filename) {
   return u;
 }
 
-function cgiGetShortAlbumLink() {
-  try {
-    var params = new URLSearchParams(window.location.search);
-    var b64 = params.get('photonic_gallery');
-    if (!b64) return null;
-    var decoded = atob(b64);
-    var m = decoded.match(/album="([^"]+)"/);
-    if (!m) return null;
-    var title = params.get('photonic_gallery_title') || '';
-    return 'https://cgi-photo-proxy.fishelkleinman.workers.dev/a/' + encodeURIComponent(m[1]) + '/' + encodeURIComponent(title);
-  } catch (e) { return null; }
-}
-
 document.head.appendChild(Object.assign(document.createElement('link'), {rel:'stylesheet', href:'https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap'}));
 
 setTimeout(function(){
@@ -337,23 +324,26 @@ setTimeout(function(){
   btn.addEventListener('mouseover',function(){btn.style.background='#2d5986';btn.style.color='#fff';});
   btn.addEventListener('mouseout',function(){btn.style.background='#a8c8e8';btn.style.color='#2d5986';});
   wrap.appendChild(btn);
-  var shortLink=cgiGetShortAlbumLink();
-  if(shortLink){
-    var cp=document.createElement('a');
-    cp.href='#';
-    cp.textContent='Copy Share Link';
-    cp.style.cssText=btnStyle;
-    cp.addEventListener('mouseover',function(){cp.style.background='#2d5986';cp.style.color='#fff';});
-    cp.addEventListener('mouseout',function(){cp.style.background='#a8c8e8';cp.style.color='#2d5986';});
-    cp.addEventListener('click',function(e){
-      e.preventDefault();
-      navigator.clipboard.writeText(shortLink).then(function(){
-        cp.textContent='Copied!';
-        setTimeout(function(){cp.textContent='Copy Share Link';},1500);
+
+  var shareBtn=document.createElement('a');
+  shareBtn.href='#';
+  shareBtn.textContent='Share';
+  shareBtn.style.cssText=btnStyle;
+  shareBtn.addEventListener('mouseover',function(){shareBtn.style.background='#2d5986';shareBtn.style.color='#fff';});
+  shareBtn.addEventListener('mouseout',function(){shareBtn.style.background='#a8c8e8';shareBtn.style.color='#2d5986';});
+  shareBtn.addEventListener('click',function(e){
+    e.preventDefault();
+    if(navigator.share){
+      navigator.share({title:document.title,url:window.location.href}).catch(function(){});
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(function(){
+        shareBtn.textContent='Copied!';
+        setTimeout(function(){shareBtn.textContent='Share';},1500);
       });
-    });
-    wrap.appendChild(cp);
-  }
+    }
+  });
+  wrap.appendChild(shareBtn);
+
   c.parentNode.insertBefore(wrap,c);
 },500);
 
