@@ -176,16 +176,34 @@ html body .photonic-desc {
 .edgtf-title-holder h1,
 .edgtf-title-holder .edgtf-page-title,
 h1.edgtf-page-title {
+  font-family: 'Teko', sans-serif !important;
   font-size: 72px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 4px !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6) !important;
 }
 
 .edgtf-title-holder.cgi-banner-has-image {
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.cgi-banner-subtitle {
+  font-family: 'Teko', sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 400 !important;
+  color: rgba(255,255,255,0.85) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 3px !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6) !important;
+  margin-top: 8px !important;
 }
 
 /* =====================
