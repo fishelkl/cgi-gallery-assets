@@ -182,6 +182,12 @@ h1.edgtf-page-title {
   letter-spacing: 4px !important;
 }
 
+.edgtf-title-holder.cgi-banner-has-image {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
 /* =====================
    CONTAINER WIDTH
    ===================== */
