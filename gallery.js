@@ -167,13 +167,14 @@ window.cgiFixGallery = function() {
         var year = ym ? ym[1] : null;
         var division = linkSrc.indexOf('Main-Camp') > -1 ? 'main-camp' : linkSrc.indexOf('Temimim') > -1 ? 'temimim' : null;
         var wm = linkSrc.match(/Week-(\d+)/i);
-        var week = wm ? wm[1] : null;
+        var week = wm ? wm[1] : '';
         var titleText = linkTitleEl.textContent.trim();
-        var titleSlug = titleText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-        var slug = week ? 'week-' + week + '-' + titleSlug : titleSlug;
+        var slug = titleText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         if (year && division && slug) {
           link.href = 'https://cgiflorida.com/boys/' + year + '/' + division + '/' + slug + '/';
         }
+        thumb.setAttribute('data-cgi-title', titleText);
+        if (week) thumb.setAttribute('data-cgi-week', week);
       }
     }
     if (thumb.querySelector('.custom-desc')) return;
@@ -199,6 +200,72 @@ window.cgiFixGallery = function() {
   });
   window.cgiPopulateFilters();
 };
+
+function cgiSlugKey(str) {
+  return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function cgiDecodeHtml(str) {
+  var el = document.createElement('textarea');
+  el.innerHTML = str || '';
+  return el.value;
+}
+
+window.cgiPagesPromise = null;
+function cgiFetchAllPages() {
+  if (window.cgiPagesPromise) return window.cgiPagesPromise;
+  window.cgiPagesPromise = (async function() {
+    var all = [];
+    var page = 1;
+    while (page <= 20) {
+      var resp;
+      try {
+        resp = await fetch('https://cgiflorida.com/boys/wp-json/wp/v2/pages?per_page=100&page=' + page + '&_fields=id,slug,parent,link,title');
+      } catch (e) { break; }
+      if (!resp.ok) break;
+      var batch = await resp.json();
+      if (!Array.isArray(batch) || !batch.length) break;
+      all = all.concat(batch);
+      if (batch.length < 100) break;
+      page++;
+    }
+    return all;
+  })();
+  return window.cgiPagesPromise;
+}
+
+function cgiFixThumbnailLinksAsync() {
+  var thumbs = Array.from(document.querySelectorAll('.photonic-level-2.photonic-thumb[data-cgi-title]:not([data-cgi-link-resolved])'));
+  if (!thumbs.length) return;
+  cgiFetchAllPages().then(function(pages) {
+    if (!pages.length) return;
+    var byId = {};
+    pages.forEach(function(p) { byId[p.id] = p; });
+    thumbs.forEach(function(thumb) {
+      thumb.setAttribute('data-cgi-link-resolved', '1');
+      var link = thumb.querySelector('a');
+      if (!link) return;
+      var titleKey = cgiSlugKey(thumb.getAttribute('data-cgi-title'));
+      var week = thumb.getAttribute('data-cgi-week') || '';
+      if (!titleKey) return;
+      var matches = pages.filter(function(p) {
+        return cgiSlugKey(cgiDecodeHtml(p.title && p.title.rendered)) === titleKey;
+      });
+      if (!matches.length) return;
+      var chosen = matches[0];
+      if (matches.length > 1 && week) {
+        var weekMatch = matches.find(function(p) {
+          var parent = byId[p.parent];
+          return parent && parent.slug === 'week-' + week;
+        });
+        if (weekMatch) chosen = weekMatch;
+      }
+      if (chosen && chosen.link) {
+        link.href = chosen.link;
+      }
+    });
+  }).catch(function() {});
+}
 
 function cgiLoadMoreAlbums(container, btn) {
   var query = container.getAttribute('data-photonic-query');
@@ -227,6 +294,7 @@ function cgiLoadMoreAlbums(container, btn) {
     cgiRenderAlbumOrder(container);
     window.cgiFixGallery();
     cgiUpdateVisibility();
+    cgiFixThumbnailLinksAsync();
     btn.textContent = 'Load More';
   }).catch(function() {
     btn.textContent = 'Load More';
@@ -608,6 +676,7 @@ function cgiBatchDownload(code, label) {
 }
 
 setTimeout(window.cgiFixGallery,500);setTimeout(window.cgiFixGallery,1500);setTimeout(window.cgiFixGallery,3000);
+setTimeout(cgiFixThumbnailLinksAsync,900);setTimeout(cgiFixThumbnailLinksAsync,2000);setTimeout(cgiFixThumbnailLinksAsync,4000);
 setTimeout(cgiUpdateVisibility,600);setTimeout(cgiUpdateVisibility,1600);setTimeout(cgiUpdateVisibility,3200);
 setTimeout(window.cgiMasonryLayout,300);
 window.addEventListener('resize',window.cgiMasonryLayout);
