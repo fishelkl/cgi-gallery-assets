@@ -156,6 +156,23 @@ window.cgiFixGallery = function() {
   var container = document.querySelector('.photonic-level-2-container');
   if (container) container.style.cssText = 'display:grid!important;grid-template-columns:' + (isMobile ? '1fr 1fr' : '1fr 1fr 1fr') + ';gap:' + (isMobile ? '8px' : '10px') + ';columns:unset;column-count:unset;width:100%;box-sizing:border-box;';
   document.querySelectorAll('.photonic-level-2.photonic-thumb').forEach(function(thumb) {
+    if (!thumb.dataset.cgiLinkFixed) {
+      thumb.dataset.cgiLinkFixed = '1';
+      var link = thumb.querySelector('a');
+      var linkImg = thumb.querySelector('img');
+      var linkTitleEl = thumb.querySelector('.photonic-title');
+      if (link && linkImg && linkTitleEl) {
+        var linkSrc = linkImg.getAttribute('src') || linkImg.getAttribute('data-src') || '';
+        var ym = linkSrc.match(/\/(\d{4})\//);
+        var year = ym ? ym[1] : null;
+        var division = linkSrc.indexOf('Main-Camp') > -1 ? 'main-camp' : linkSrc.indexOf('Temimim') > -1 ? 'temimim' : null;
+        var titleText = linkTitleEl.textContent.trim();
+        var slug = titleText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        if (year && division && slug) {
+          link.href = 'https://cgiflorida.com/boys/' + year + '/' + division + '/' + slug + '/';
+        }
+      }
+    }
     if (thumb.querySelector('.custom-desc')) return;
     var fig = thumb.querySelector('figcaption.photonic-title-info');
     var titleEl = thumb.querySelector('.photonic-title');
