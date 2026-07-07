@@ -331,23 +331,22 @@ function cgiProxyUrl(url, filename) {
 
 document.head.appendChild(Object.assign(document.createElement('link'), {rel:'stylesheet', href:'https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap'}));
 
-function cgiForceBannerSize(width, height) {
+function cgiForceBannerSize() {
   var holder = document.querySelector('.edgtf-title-holder');
   if (!holder) return;
-  holder.style.setProperty('height', 'auto', 'important');
+  var h = Math.round(Math.max(300, Math.min(window.innerHeight * 0.5, 550)));
+  holder.style.removeProperty('aspect-ratio');
+  holder.style.setProperty('height', h + 'px', 'important');
   holder.style.setProperty('min-height', '0', 'important');
   holder.style.setProperty('max-height', 'none', 'important');
-  if (width && height) {
-    holder.style.setProperty('aspect-ratio', width + ' / ' + height, 'important');
-  }
   var parent = holder.closest('.edgtf-title');
   if (parent) {
-    parent.style.setProperty('height', 'auto', 'important');
+    parent.style.setProperty('height', h + 'px', 'important');
     parent.style.setProperty('min-height', '0', 'important');
     parent.style.setProperty('max-height', 'none', 'important');
     parent.style.setProperty('background-color', 'transparent', 'important');
     parent.style.setProperty('overflow', 'visible', 'important');
-    parent.setAttribute('data-height', 'auto');
+    parent.setAttribute('data-height', String(h));
   }
 }
 
@@ -363,8 +362,6 @@ function cgiApplyBannerImage() {
       var media = page._embedded && page._embedded['wp:featuredmedia'] && page._embedded['wp:featuredmedia'][0];
       if (!media || !media.source_url) return;
       var url = media.source_url;
-      var width = media.media_details && media.media_details.width;
-      var height = media.media_details && media.media_details.height;
       var holder = document.querySelector('.edgtf-title-holder');
       if (!holder) return;
       holder.classList.add('cgi-banner-has-image');
@@ -372,10 +369,11 @@ function cgiApplyBannerImage() {
       holder.style.backgroundSize = 'cover';
       holder.style.backgroundPosition = 'center center';
       holder.style.backgroundRepeat = 'no-repeat';
-      cgiForceBannerSize(width, height);
-      setTimeout(function() { cgiForceBannerSize(width, height); }, 800);
-      setTimeout(function() { cgiForceBannerSize(width, height); }, 1800);
-      setTimeout(function() { cgiForceBannerSize(width, height); }, 3000);
+      cgiForceBannerSize();
+      setTimeout(cgiForceBannerSize, 800);
+      setTimeout(cgiForceBannerSize, 1800);
+      setTimeout(cgiForceBannerSize, 3000);
+      window.addEventListener('resize', cgiForceBannerSize);
     })
     .catch(function() {});
 }
@@ -402,16 +400,24 @@ setTimeout(cgiApplyBannerSubtitle, 1200);
 setTimeout(cgiApplyBannerSubtitle, 2500);
 setTimeout(cgiApplyBannerSubtitle, 4000);
 
+function cgiGetOrCreateButtonRow(container) {
+  var row = document.getElementById('cgi-button-row');
+  if (row) return row;
+  row = document.createElement('div');
+  row.id = 'cgi-button-row';
+  container.parentNode.insertBefore(row, container);
+  return row;
+}
+
 setTimeout(function(){
   if(!cgiIsAlbumPage())return;
   var c=document.querySelector('.photonic-standard-layout');
   if(!c)return;
-  var wrap=document.createElement('div');
-  wrap.style.cssText='display:flex;gap:12px;align-items:center;margin:0 0 20px 0;flex-wrap:wrap;';
+  var wrap=cgiGetOrCreateButtonRow(c);
   var btnStyle='display:inline-block;background:#a8c8e8;color:#2d5986;font-family:Teko,sans-serif;font-size:18px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:12px 40px;border-radius:8px;text-decoration:none;transition:all 0.3s ease;cursor:pointer;';
   var btn=document.createElement('a');
   btn.href='https://cgiflorida.com/boys/gallery/';
-  btn.textContent='\u2190 Back';
+  btn.textContent='← Back';
   btn.style.cssText=btnStyle;
   btn.addEventListener('mouseover',function(){btn.style.background='#2d5986';btn.style.color='#fff';});
   btn.addEventListener('mouseout',function(){btn.style.background='#a8c8e8';btn.style.color='#2d5986';});
@@ -436,8 +442,6 @@ setTimeout(function(){
     }
   });
   wrap.appendChild(shareBtn);
-
-  c.parentNode.insertBefore(wrap,c);
 },500);
 
 function removeDownloadBar(){var b=document.getElementById('cgi-dl');if(b)b.remove();}
@@ -465,7 +469,7 @@ function showDownloadBar(){
   menu.appendChild(mkB('Full Size',fS));
   var mb=document.createElement('div');
   mb.style.cssText='background:#a8c8e8;color:#2d5986;font-family:Teko,sans-serif;font-size:18px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:12px 20px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;';
-  mb.textContent='\u2913 Download';
+  mb.textContent='⤓ Download';
   var mo=false;
   function oM(){mo=true;menu.style.display='flex';mb.style.background='#2d5986';mb.style.color='#fff';}
   function cM(){mo=false;menu.style.display='none';mb.style.background='#a8c8e8';mb.style.color='#2d5986';}
@@ -499,6 +503,7 @@ function cgiInsertSelectToggle() {
   if (document.getElementById('cgi-select-toggle')) return;
   var c = document.querySelector('.photonic-standard-layout');
   if (!c) return;
+  var row = cgiGetOrCreateButtonRow(c);
   var btn = document.createElement('a');
   btn.id = 'cgi-select-toggle';
   btn.href = '#';
@@ -511,7 +516,7 @@ function cgiInsertSelectToggle() {
     btn.textContent = window.cgiSelectMode ? 'Cancel Selecting' : 'Select Photos';
     if (!window.cgiSelectMode) cgiClearSelection();
   });
-  c.parentNode.insertBefore(btn, c);
+  row.appendChild(btn);
 }
 
 function cgiSetupThumbSelection() {
