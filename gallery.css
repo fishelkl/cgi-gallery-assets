@@ -173,9 +173,9 @@ html body .photonic-desc {
    PAGE TITLE
    ===================== */
 
-.edgtf-title-holder h1,
-.edgtf-title-holder .edgtf-page-title,
-h1.edgtf-page-title {
+html body .edgtf-title-holder h1,
+html body .edgtf-title-holder .edgtf-page-title,
+html body h1.edgtf-page-title {
   font-family: 'Teko', sans-serif !important;
   font-size: 72px !important;
   font-weight: 700 !important;
@@ -184,7 +184,7 @@ h1.edgtf-page-title {
   text-shadow: 0 1px 4px rgba(0,0,0,0.6) !important;
 }
 
-.edgtf-title-holder.cgi-banner-has-image {
+html body .edgtf-title-holder.cgi-banner-has-image {
   position: relative !important;
   top: auto !important;
   left: auto !important;
@@ -200,12 +200,13 @@ h1.edgtf-page-title {
   margin: 0 0 30px 0 !important;
 }
 
-.edgtf-title-holder.cgi-banner-has-image + * {
+html body .edgtf-title-holder.cgi-banner-has-image + * {
   margin-top: 0 !important;
 }
 
-.edgtf-title-holder.cgi-banner-has-image * {
+html body .edgtf-title-holder.cgi-banner-has-image * {
   position: static !important;
+  float: none !important;
   left: auto !important;
   right: auto !important;
   top: auto !important;
@@ -216,12 +217,17 @@ h1.edgtf-page-title {
   margin-right: auto !important;
 }
 
-.edgtf-title-holder.cgi-banner-has-image h1,
-.edgtf-title-holder.cgi-banner-has-image .edgtf-page-title {
+html body .edgtf-title-holder.cgi-banner-has-image *:not(span) {
+  display: block !important;
+}
+
+html body .edgtf-title-holder.cgi-banner-has-image h1,
+html body .edgtf-title-holder.cgi-banner-has-image .edgtf-page-title {
   width: 100% !important;
   text-align: center !important;
   margin-left: auto !important;
   margin-right: auto !important;
+  display: block !important;
 }
 
 .cgi-banner-subtitle {
