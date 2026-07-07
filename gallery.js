@@ -331,6 +331,30 @@ function cgiProxyUrl(url, filename) {
 
 document.head.appendChild(Object.assign(document.createElement('link'), {rel:'stylesheet', href:'https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap'}));
 
+function cgiApplyBannerImage() {
+  var parts = window.location.pathname.split('/').filter(Boolean);
+  var slug = parts[parts.length - 1];
+  if (!slug) return;
+  fetch('https://cgiflorida.com/boys/wp-json/wp/v2/pages?slug=' + encodeURIComponent(slug) + '&_embed=wp:featuredmedia')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.length) return;
+      var page = data[0];
+      var media = page._embedded && page._embedded['wp:featuredmedia'] && page._embedded['wp:featuredmedia'][0];
+      var url = media && media.source_url;
+      if (!url) return;
+      var holder = document.querySelector('.edgtf-title-holder');
+      if (holder) {
+        holder.style.backgroundImage = 'url(' + url + ')';
+        holder.style.backgroundSize = 'cover';
+        holder.style.backgroundPosition = 'center center';
+        holder.style.backgroundRepeat = 'no-repeat';
+      }
+    })
+    .catch(function() {});
+}
+setTimeout(cgiApplyBannerImage, 500);
+
 setTimeout(function(){
   if(!cgiIsAlbumPage())return;
   var c=document.querySelector('.photonic-standard-layout');
