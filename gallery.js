@@ -166,8 +166,11 @@ window.cgiFixGallery = function() {
         var ym = linkSrc.match(/\/(\d{4})\//);
         var year = ym ? ym[1] : null;
         var division = linkSrc.indexOf('Main-Camp') > -1 ? 'main-camp' : linkSrc.indexOf('Temimim') > -1 ? 'temimim' : null;
+        var wm = linkSrc.match(/Week-(\d+)/i);
+        var week = wm ? wm[1] : null;
         var titleText = linkTitleEl.textContent.trim();
-        var slug = titleText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        var titleSlug = titleText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        var slug = week ? 'week-' + week + '-' + titleSlug : titleSlug;
         if (year && division && slug) {
           link.href = 'https://cgiflorida.com/boys/' + year + '/' + division + '/' + slug + '/';
         }
