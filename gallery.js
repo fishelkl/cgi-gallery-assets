@@ -329,15 +329,6 @@ function cgiProxyUrl(url, filename) {
   return u;
 }
 
-function cgiGetShareLink() {
-  try {
-    var parts = window.location.pathname.split('/').filter(Boolean);
-    var slug = parts[parts.length - 1];
-    if (!slug || slug === 'album-view') return null;
-    return 'https://cgi-photo-proxy.fishelkleinman.workers.dev/CGIFL/' + slug;
-  } catch (e) { return null; }
-}
-
 document.head.appendChild(Object.assign(document.createElement('link'), {rel:'stylesheet', href:'https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap'}));
 
 setTimeout(function(){
@@ -363,7 +354,7 @@ setTimeout(function(){
   shareBtn.addEventListener('mouseout',function(){shareBtn.style.background='#a8c8e8';shareBtn.style.color='#2d5986';});
   shareBtn.addEventListener('click',function(e){
     e.preventDefault();
-    var shareUrl=cgiGetShareLink()||window.location.href;
+    var shareUrl=window.location.href;
     if(navigator.share){
       navigator.share({title:document.title,url:shareUrl}).catch(function(){});
     } else {
