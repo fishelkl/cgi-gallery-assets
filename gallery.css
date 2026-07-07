@@ -193,6 +193,32 @@ h1.edgtf-page-title {
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
+  max-width: 1100px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  border-radius: 12px !important;
+}
+
+@media (max-width: 1200px) {
+  .edgtf-title-holder.cgi-banner-has-image {
+    max-width: 92% !important;
+  }
+}
+
+.edgtf-title-holder.cgi-banner-has-image * {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+}
+
+.edgtf-title-holder.cgi-banner-has-image h1,
+.edgtf-title-holder.cgi-banner-has-image .edgtf-page-title {
+  width: 100% !important;
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 .cgi-banner-subtitle {
@@ -204,6 +230,8 @@ h1.edgtf-page-title {
   letter-spacing: 3px !important;
   text-shadow: 0 1px 4px rgba(0,0,0,0.6) !important;
   margin-top: 8px !important;
+  width: 100% !important;
+  text-align: center !important;
 }
 
 /* =====================
