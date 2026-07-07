@@ -341,14 +341,19 @@ function cgiApplyBannerImage() {
       if (!data || !data.length) return;
       var page = data[0];
       var media = page._embedded && page._embedded['wp:featuredmedia'] && page._embedded['wp:featuredmedia'][0];
-      var url = media && media.source_url;
-      if (!url) return;
+      if (!media || !media.source_url) return;
+      var url = media.source_url;
+      var width = media.media_details && media.media_details.width;
+      var height = media.media_details && media.media_details.height;
       var holder = document.querySelector('.edgtf-title-holder');
-      if (holder) {
-        holder.style.backgroundImage = 'url(' + url + ')';
-        holder.style.backgroundSize = 'cover';
-        holder.style.backgroundPosition = 'center center';
-        holder.style.backgroundRepeat = 'no-repeat';
+      if (!holder) return;
+      holder.classList.add('cgi-banner-has-image');
+      holder.style.backgroundImage = 'url(' + url + ')';
+      holder.style.backgroundSize = 'cover';
+      holder.style.backgroundPosition = 'center center';
+      holder.style.backgroundRepeat = 'no-repeat';
+      if (width && height) {
+        holder.style.aspectRatio = width + ' / ' + height;
       }
     })
     .catch(function() {});
