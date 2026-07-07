@@ -351,6 +351,7 @@ function cgiForceBannerSize() {
 }
 
 function cgiApplyBannerImage() {
+  if (!cgiIsAlbumPage()) return;
   var parts = window.location.pathname.split('/').filter(Boolean);
   var slug = parts[parts.length - 1];
   if (!slug) return;
