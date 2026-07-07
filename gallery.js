@@ -360,6 +360,27 @@ function cgiApplyBannerImage() {
 }
 setTimeout(cgiApplyBannerImage, 500);
 
+function cgiApplyBannerSubtitle() {
+  if (!cgiIsAlbumPage()) return;
+  var holder = document.querySelector('.edgtf-title-holder');
+  if (!holder || holder.querySelector('.cgi-banner-subtitle')) return;
+  var img = document.querySelector('.photonic-standard-layout img');
+  if (!img) return;
+  var src = img.getAttribute('src') || img.getAttribute('data-src') || '';
+  var division = src.indexOf('Main-Camp') > -1 ? 'Main Camp' : src.indexOf('Temimim') > -1 ? 'Temimim' : '';
+  var wm = src.match(/Week-(\d+)/i);
+  var week = wm ? 'Week ' + wm[1] : '';
+  var subtitle = division && week ? division + ' \xB7 ' + week : division || week || '';
+  if (!subtitle) return;
+  var sub = document.createElement('div');
+  sub.className = 'cgi-banner-subtitle';
+  sub.textContent = subtitle;
+  holder.appendChild(sub);
+}
+setTimeout(cgiApplyBannerSubtitle, 1200);
+setTimeout(cgiApplyBannerSubtitle, 2500);
+setTimeout(cgiApplyBannerSubtitle, 4000);
+
 setTimeout(function(){
   if(!cgiIsAlbumPage())return;
   var c=document.querySelector('.photonic-standard-layout');
