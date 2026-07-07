@@ -331,6 +331,17 @@ function cgiProxyUrl(url, filename) {
 
 document.head.appendChild(Object.assign(document.createElement('link'), {rel:'stylesheet', href:'https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap'}));
 
+function cgiForceBannerSize(width, height) {
+  var holder = document.querySelector('.edgtf-title-holder');
+  if (!holder) return;
+  holder.style.setProperty('height', 'auto', 'important');
+  holder.style.setProperty('min-height', '0', 'important');
+  holder.style.setProperty('max-height', 'none', 'important');
+  if (width && height) {
+    holder.style.setProperty('aspect-ratio', width + ' / ' + height, 'important');
+  }
+}
+
 function cgiApplyBannerImage() {
   var parts = window.location.pathname.split('/').filter(Boolean);
   var slug = parts[parts.length - 1];
@@ -352,9 +363,10 @@ function cgiApplyBannerImage() {
       holder.style.backgroundSize = 'cover';
       holder.style.backgroundPosition = 'center center';
       holder.style.backgroundRepeat = 'no-repeat';
-      if (width && height) {
-        holder.style.aspectRatio = width + ' / ' + height;
-      }
+      cgiForceBannerSize(width, height);
+      setTimeout(function() { cgiForceBannerSize(width, height); }, 800);
+      setTimeout(function() { cgiForceBannerSize(width, height); }, 1800);
+      setTimeout(function() { cgiForceBannerSize(width, height); }, 3000);
     })
     .catch(function() {});
 }
