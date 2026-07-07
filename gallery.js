@@ -340,6 +340,15 @@ function cgiForceBannerSize(width, height) {
   if (width && height) {
     holder.style.setProperty('aspect-ratio', width + ' / ' + height, 'important');
   }
+  var parent = holder.closest('.edgtf-title');
+  if (parent) {
+    parent.style.setProperty('height', 'auto', 'important');
+    parent.style.setProperty('min-height', '0', 'important');
+    parent.style.setProperty('max-height', 'none', 'important');
+    parent.style.setProperty('background-color', 'transparent', 'important');
+    parent.style.setProperty('overflow', 'visible', 'important');
+    parent.setAttribute('data-height', 'auto');
+  }
 }
 
 function cgiApplyBannerImage() {
