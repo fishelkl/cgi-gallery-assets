@@ -185,6 +185,12 @@ h1.edgtf-page-title {
 }
 
 .edgtf-title-holder.cgi-banner-has-image {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 1 !important;
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
@@ -194,9 +200,12 @@ h1.edgtf-page-title {
   justify-content: center !important;
   text-align: center !important;
   max-width: 1100px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  margin: 0 auto 30px auto !important;
   border-radius: 12px !important;
+}
+
+.edgtf-title-holder.cgi-banner-has-image + * {
+  margin-top: 0 !important;
 }
 
 @media (max-width: 1200px) {
