@@ -253,8 +253,8 @@ html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-subtitle {
    CONTAINER WIDTH
    ===================== */
 
-.edgtf-content .edgtf-container,
-.edgtf-content .edgtf-container-inner {
+body.cgi-gallery-page .edgtf-content .edgtf-container,
+body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
   max-width: 100% !important;
   width: 100% !important;
   padding-left: 20px !important;
@@ -589,8 +589,8 @@ a.photonic-more-button.photonic-more-dynamic:hover {
     columns: unset !important;
   }
 
-  .edgtf-content .edgtf-container,
-  .edgtf-content .edgtf-container-inner {
+  body.cgi-gallery-page .edgtf-content .edgtf-container,
+  body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
     padding-left: 10px !important;
     padding-right: 10px !important;
   }
