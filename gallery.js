@@ -8,6 +8,10 @@ function cgiIsAlbumPage() {
   return !!document.querySelector('.photonic-standard-layout:not(.photonic-level-2-container)');
 }
 
+if (document.querySelector('.photonic-smug-stream, .photonic-level-2-container, .photonic-standard-layout')) {
+  document.body.classList.add('cgi-gallery-page');
+}
+
 function cgiEnsureAlbumOrderInit(container) {
   if (!window.cgiAlbumOrder.length) {
     window.cgiAlbumOrder = Array.from(container.querySelectorAll(':scope > .photonic-level-2.photonic-thumb'));
@@ -433,6 +437,7 @@ function cgiProxyUrl(url, filename) {
 document.head.appendChild(Object.assign(document.createElement('link'), {rel:'stylesheet', href:'https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap'}));
 
 function cgiForceBannerSize() {
+  if (!cgiIsAlbumPage()) return;
   var holder = document.querySelector('.edgtf-title-holder');
   if (!holder) return;
   var h = Math.round(Math.max(450, Math.min(window.innerHeight * 0.7, 750)));
