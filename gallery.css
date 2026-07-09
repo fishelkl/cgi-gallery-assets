@@ -217,6 +217,8 @@ html body .edgtf-title-holder.cgi-banner-has-image * {
   padding: 0 !important;
   min-height: 0 !important;
   line-height: normal !important;
+  flex: none !important;
+  height: auto !important;
 }
 
 html body .edgtf-title-holder.cgi-banner-has-image *:not(span) {
