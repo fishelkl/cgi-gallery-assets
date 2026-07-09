@@ -162,6 +162,16 @@ window.cgiFixGallery = function() {
       var linkImg = thumb.querySelector('img');
       var linkTitleEl = thumb.querySelector('.photonic-title');
       if (link && linkImg && linkTitleEl) {
+        var origHref = link.getAttribute('href') || '';
+        try {
+          var hu = new URL(origHref, window.location.origin);
+          var b64 = hu.searchParams.get('photonic_gallery');
+          if (b64) {
+            var decoded = atob(b64);
+            var am = decoded.match(/album="([^"]+)"/);
+            if (am) thumb.setAttribute('data-cgi-album-id', am[1]);
+          }
+        } catch (e) {}
         var linkSrc = linkImg.getAttribute('src') || linkImg.getAttribute('data-src') || '';
         var ym = linkSrc.match(/\/(\d{4})\//);
         var year = ym ? ym[1] : null;
@@ -234,17 +244,37 @@ function cgiFetchAllPages() {
   return window.cgiPagesPromise;
 }
 
+window.cgiAlbumLinksPromise = null;
+function cgiFetchAlbumLinks() {
+  if (window.cgiAlbumLinksPromise) return window.cgiAlbumLinksPromise;
+  window.cgiAlbumLinksPromise = fetch('https://cgi-photo-proxy.fishelkleinman.workers.dev/album-links')
+    .then(function(r) { return r.ok ? r.json() : []; })
+    .catch(function() { return []; });
+  return window.cgiAlbumLinksPromise;
+}
+
 function cgiFixThumbnailLinksAsync() {
   var thumbs = Array.from(document.querySelectorAll('.photonic-level-2.photonic-thumb[data-cgi-title]:not([data-cgi-link-resolved])'));
   if (!thumbs.length) return;
-  cgiFetchAllPages().then(function(pages) {
-    if (!pages.length) return;
+  Promise.all([cgiFetchAlbumLinks(), cgiFetchAllPages()]).then(function(results) {
+    var albumLinks = results[0] || [];
+    var pages = results[1] || [];
+    var linkByAlbumId = {};
+    albumLinks.forEach(function(a) { linkByAlbumId[a.albumId] = a.link; });
     var byId = {};
     pages.forEach(function(p) { byId[p.id] = p; });
     thumbs.forEach(function(thumb) {
       thumb.setAttribute('data-cgi-link-resolved', '1');
       var link = thumb.querySelector('a');
       if (!link) return;
+
+      var albumId = thumb.getAttribute('data-cgi-album-id');
+      if (albumId && linkByAlbumId[albumId]) {
+        link.href = linkByAlbumId[albumId];
+        return;
+      }
+
+      if (!pages.length) return;
       var titleKey = cgiSlugKey(thumb.getAttribute('data-cgi-title'));
       var week = thumb.getAttribute('data-cgi-week') || '';
       if (!titleKey) return;
@@ -405,7 +435,7 @@ document.head.appendChild(Object.assign(document.createElement('link'), {rel:'st
 function cgiForceBannerSize() {
   var holder = document.querySelector('.edgtf-title-holder');
   if (!holder) return;
-  var h = Math.round(Math.max(300, Math.min(window.innerHeight * 0.5, 550)));
+  var h = Math.round(Math.max(450, Math.min(window.innerHeight * 0.7, 750)));
   holder.style.removeProperty('aspect-ratio');
   holder.style.setProperty('height', h + 'px', 'important');
   holder.style.setProperty('min-height', '0', 'important');
@@ -426,6 +456,12 @@ function cgiApplyBannerImage() {
   var parts = window.location.pathname.split('/').filter(Boolean);
   var slug = parts[parts.length - 1];
   if (!slug) return;
+  var holder = document.querySelector('.edgtf-title-holder');
+  if (holder) {
+    holder.classList.add('cgi-banner-has-image');
+    cgiForceBannerSize();
+    window.addEventListener('resize', cgiForceBannerSize);
+  }
   fetch('https://cgiflorida.com/boys/wp-json/wp/v2/pages?slug=' + encodeURIComponent(slug) + '&_embed=wp:featuredmedia')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -434,9 +470,8 @@ function cgiApplyBannerImage() {
       var media = page._embedded && page._embedded['wp:featuredmedia'] && page._embedded['wp:featuredmedia'][0];
       if (!media || !media.source_url) return;
       var url = media.source_url;
-      var holder = document.querySelector('.edgtf-title-holder');
+      if (!holder) holder = document.querySelector('.edgtf-title-holder');
       if (!holder) return;
-      holder.classList.add('cgi-banner-has-image');
       holder.style.backgroundImage = 'url(' + url + ')';
       holder.style.backgroundSize = 'cover';
       holder.style.backgroundPosition = 'center center';
@@ -444,12 +479,10 @@ function cgiApplyBannerImage() {
       cgiForceBannerSize();
       setTimeout(cgiForceBannerSize, 800);
       setTimeout(cgiForceBannerSize, 1800);
-      setTimeout(cgiForceBannerSize, 3000);
-      window.addEventListener('resize', cgiForceBannerSize);
     })
     .catch(function() {});
 }
-setTimeout(cgiApplyBannerImage, 500);
+cgiApplyBannerImage();
 
 function cgiApplyBannerSubtitle() {
   if (!cgiIsAlbumPage()) return;
