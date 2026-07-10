@@ -573,7 +573,8 @@ function cgiGetOrCreateButtonRow(container) {
   if (row) return row;
   row = document.createElement('div');
   row.id = 'cgi-button-row';
-  container.parentNode.insertBefore(row, container);
+  var outer = container.closest('.photonic-smug-stream, .photonic-stream') || container;
+  outer.parentNode.insertBefore(row, outer);
   return row;
 }
 
