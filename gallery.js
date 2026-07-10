@@ -549,20 +549,35 @@ function cgiFormatBannerDate(dateStr) {
   return months[d.getMonth()] + ' ' + day + suffix + ', ' + d.getFullYear();
 }
 
+function cgiSmoothScrollTo(target) {
+  var startY = window.pageYOffset;
+  var endY = target.getBoundingClientRect().top + startY;
+  var duration = 800;
+  var startTime = null;
+  function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+  function step(timestamp) {
+    if (!startTime) startTime = timestamp;
+    var progress = Math.min((timestamp - startTime) / duration, 1);
+    window.scrollTo(0, startY + (endY - startY) * easeInOutQuad(progress));
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 function cgiApplyBannerExtras(dateStr) {
   var holder = document.querySelector('.edgtf-title-holder');
-  if (!holder || holder.querySelector('.cgi-banner-extras')) return;
-
-  var wrap = document.createElement('div');
-  wrap.className = 'cgi-banner-extras';
+  if (!holder || holder.querySelector('.cgi-banner-bottom')) return;
 
   var formattedDate = cgiFormatBannerDate(dateStr);
   if (formattedDate) {
     var sub = document.createElement('div');
     sub.className = 'cgi-banner-subtitle';
     sub.textContent = formattedDate;
-    wrap.appendChild(sub);
+    holder.appendChild(sub);
   }
+
+  var bottomWrap = document.createElement('div');
+  bottomWrap.className = 'cgi-banner-bottom';
 
   var viewBtn = document.createElement('a');
   viewBtn.href = '#';
@@ -571,9 +586,9 @@ function cgiApplyBannerExtras(dateStr) {
   viewBtn.addEventListener('click', function(e) {
     e.preventDefault();
     var grid = document.querySelector('.photonic-standard-layout');
-    if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (grid) cgiSmoothScrollTo(grid);
   });
-  wrap.appendChild(viewBtn);
+  bottomWrap.appendChild(viewBtn);
 
   var logoLink = document.createElement('a');
   logoLink.href = 'https://cgiflorida.com/boys/gallery/';
@@ -587,9 +602,9 @@ function cgiApplyBannerExtras(dateStr) {
   logoText.textContent = "DOVI'S CGI FLORIDA";
   logoLink.appendChild(logoImg);
   logoLink.appendChild(logoText);
-  wrap.appendChild(logoLink);
+  bottomWrap.appendChild(logoLink);
 
-  holder.appendChild(wrap);
+  holder.appendChild(bottomWrap);
 }
 
 function cgiApplyBannerImage() {
