@@ -557,9 +557,7 @@ setTimeout(function(){
   shareBtn.addEventListener('mouseout',function(){shareBtn.style.background='#a8c8e8';shareBtn.style.color='#2d5986';});
   shareBtn.addEventListener('click',function(e){
     e.preventDefault();
-    var parts=window.location.pathname.split('/').filter(Boolean);
-    var slug=parts[parts.length-1];
-    var shareUrl='https://cgi-photo-proxy.fishelkleinman.workers.dev/CGIFL/'+encodeURIComponent(slug);
+    var shareUrl=window.location.href;
     if(navigator.share){
       navigator.share({title:document.title,url:shareUrl}).catch(function(){});
     } else {
