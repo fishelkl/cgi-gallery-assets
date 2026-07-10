@@ -402,11 +402,11 @@ window.cgiMasonryLayout = function() {
   if (!cgiIsAlbumPage()) return;
   var container = document.querySelector('.photonic-standard-layout');
   if (!container || !container.offsetWidth) return;
-  var figures = Array.from(container.querySelectorAll('figure'));
-  if (!figures.length) return;
 
   function doLayout() {
     if (!container.offsetWidth) return;
+    var figures = Array.from(container.querySelectorAll('figure'));
+    if (!figures.length) return;
     var cols = window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 4;
     var gap = 8;
     var colWidth = (container.offsetWidth - (gap * (cols - 1))) / cols;
@@ -427,9 +427,6 @@ window.cgiMasonryLayout = function() {
     container.classList.add('cgi-masonry-ready');
   }
 
-  if (container.dataset.masonryInit) { doLayout(); return; }
-  container.dataset.masonryInit = '1';
-
   var pending = false;
   function scheduleLayout() {
     if (pending) return;
@@ -437,15 +434,29 @@ window.cgiMasonryLayout = function() {
     requestAnimationFrame(function() { pending = false; doLayout(); });
   }
 
-  container.querySelectorAll('img').forEach(function(img) {
-    if (img.complete && img.naturalWidth) {
-      scheduleLayout();
-    } else {
-      img.addEventListener('load', scheduleLayout);
-      img.addEventListener('error', scheduleLayout);
-    }
-  });
+  function bindImageListeners() {
+    container.querySelectorAll('img:not([data-cgi-masonry-bound])').forEach(function(img) {
+      img.setAttribute('data-cgi-masonry-bound', '1');
+      if (img.complete && img.naturalWidth) {
+        scheduleLayout();
+      } else {
+        img.addEventListener('load', scheduleLayout);
+        img.addEventListener('error', scheduleLayout);
+      }
+    });
+  }
+
+  bindImageListeners();
   scheduleLayout();
+
+  if (!container.dataset.masonryObserverBound) {
+    container.dataset.masonryObserverBound = '1';
+    var observer = new MutationObserver(function() {
+      bindImageListeners();
+      scheduleLayout();
+    });
+    observer.observe(container, { childList: true });
+  }
 };
 
 function cgiSizedUrl(src, code) {
