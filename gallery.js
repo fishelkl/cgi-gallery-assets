@@ -755,7 +755,7 @@ function cgiBatchDownload(code, label) {
   var items = Array.from(window.cgiSelected);
   if (!items.length) return;
   var usedNames = {};
-  items.forEach(function(src) {
+  items.forEach(function(src, i) {
     var fname = cgiOriginalFilename(src);
     if (usedNames[fname]) {
       usedNames[fname]++;
@@ -763,12 +763,14 @@ function cgiBatchDownload(code, label) {
     } else {
       usedNames[fname] = 1;
     }
-    var a = document.createElement('a');
-    a.href = cgiProxyUrl(cgiSizedUrl(src, code), fname);
-    a.download = fname;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    setTimeout(function() {
+      var a = document.createElement('a');
+      a.href = cgiProxyUrl(cgiSizedUrl(src, code), fname);
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, i * 400);
   });
 }
 
