@@ -581,19 +581,18 @@ function cgiGetOrCreateButtonRow(container) {
 function cgiApplyStickyButtonRow() {
   var row = document.getElementById('cgi-button-row');
   if (!row) return;
-  var headerHeight = 0;
-  document.querySelectorAll('header').forEach(function(h) {
-    if (h.offsetParent === null) return;
-    var style = window.getComputedStyle(h);
-    if (style.position === 'fixed' || style.position === 'sticky') {
-      headerHeight = Math.max(headerHeight, h.offsetHeight);
-    }
-  });
-  row.style.position = 'sticky';
-  row.style.top = headerHeight + 'px';
+  row.style.position = 'fixed';
+  row.style.left = '0';
+  row.style.right = '0';
+  row.style.top = 'auto';
+  row.style.bottom = '0';
   row.style.zIndex = '200';
   row.style.background = '#fff';
-  row.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+  row.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.08)';
+  row.style.margin = '0';
+  row.style.padding = '10px 20px';
+  row.style.boxSizing = 'border-box';
+  document.body.style.paddingBottom = (row.offsetHeight + 10) + 'px';
 }
 window.addEventListener('resize', cgiApplyStickyButtonRow);
 
