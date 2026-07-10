@@ -301,6 +301,30 @@ function cgiFixThumbnailLinksAsync() {
   }).catch(function() {});
 }
 
+document.addEventListener('click', function(e) {
+  var link = e.target.closest('.photonic-level-2.photonic-thumb a');
+  if (!link) return;
+  var href = link.getAttribute('href') || '';
+  if (href.indexOf('photonic_gallery=') === -1) return;
+  e.preventDefault();
+  var albumId = null;
+  try {
+    var hu = new URL(href, window.location.origin);
+    var b64 = hu.searchParams.get('photonic_gallery');
+    if (b64) {
+      var decoded = atob(b64);
+      var am = decoded.match(/album="([^"]+)"/);
+      if (am) albumId = am[1];
+    }
+  } catch (err) {}
+  cgiFetchAlbumLinks().then(function(albumLinks) {
+    var match = albumId && albumLinks.find(function(a) { return a.albumId === albumId; });
+    window.location.href = match ? match.link : href;
+  }).catch(function() {
+    window.location.href = href;
+  });
+}, true);
+
 function cgiLoadMoreAlbums(container, btn) {
   var query = container.getAttribute('data-photonic-query');
   var provider = container.getAttribute('data-photonic-platform');
