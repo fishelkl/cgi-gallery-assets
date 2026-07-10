@@ -577,6 +577,25 @@ function cgiGetOrCreateButtonRow(container) {
   return row;
 }
 
+function cgiApplyStickyButtonRow() {
+  var row = document.getElementById('cgi-button-row');
+  if (!row) return;
+  var headerHeight = 0;
+  document.querySelectorAll('header').forEach(function(h) {
+    if (h.offsetParent === null) return;
+    var style = window.getComputedStyle(h);
+    if (style.position === 'fixed' || style.position === 'sticky') {
+      headerHeight = Math.max(headerHeight, h.offsetHeight);
+    }
+  });
+  row.style.position = 'sticky';
+  row.style.top = headerHeight + 'px';
+  row.style.zIndex = '200';
+  row.style.background = '#fff';
+  row.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+}
+window.addEventListener('resize', cgiApplyStickyButtonRow);
+
 setTimeout(function(){
   if(!cgiIsAlbumPage())return;
   var c=document.querySelector('.photonic-standard-layout');
@@ -610,6 +629,7 @@ setTimeout(function(){
     }
   });
   wrap.appendChild(shareBtn);
+  cgiApplyStickyButtonRow();
 },500);
 
 function removeDownloadBar(){var b=document.getElementById('cgi-dl');if(b)b.remove();}
@@ -681,6 +701,7 @@ function cgiInsertSelectToggle() {
     if (!window.cgiSelectMode) cgiClearSelection();
   });
   row.appendChild(btn);
+  cgiApplyStickyButtonRow();
 }
 
 function cgiSetupThumbSelection() {
@@ -755,7 +776,7 @@ function cgiBatchDownload(code, label) {
   var items = Array.from(window.cgiSelected);
   if (!items.length) return;
   var usedNames = {};
-  items.forEach(function(src, i) {
+  var payloadItems = items.map(function(src) {
     var fname = cgiOriginalFilename(src);
     if (usedNames[fname]) {
       usedNames[fname]++;
@@ -763,15 +784,20 @@ function cgiBatchDownload(code, label) {
     } else {
       usedNames[fname] = 1;
     }
-    setTimeout(function() {
-      var a = document.createElement('a');
-      a.href = cgiProxyUrl(cgiSizedUrl(src, code), fname);
-      a.download = fname;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }, i * 400);
+    return { url: cgiSizedUrl(src, code), name: fname };
   });
+  var form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'https://cgi-photo-proxy.fishelkleinman.workers.dev/zip-download';
+  form.style.display = 'none';
+  var input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'payload';
+  input.value = JSON.stringify({ items: payloadItems, zipName: 'CGI-' + label + '-Photos.zip' });
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); }, 2000);
 }
 
 setTimeout(window.cgiFixGallery,500);setTimeout(window.cgiFixGallery,1500);setTimeout(window.cgiFixGallery,3000);
