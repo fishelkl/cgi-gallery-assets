@@ -668,3 +668,12 @@ a.photonic-more-button.photonic-more-dynamic:hover {
 figure.photonic-level-2.photonic-thumb[style*="display: none"] {
   display: none !important;
 }
+/* =====================
+   CAMP GALLERY POST TYPE - Hide default blog-post furniture
+   ===================== */
+
+body.single-camp_gallery .edgtf-post-title,
+body.single-camp_gallery .edgtf-post-info,
+body.single-camp_gallery .edgtf-related-posts-holder {
+  display: none !important;
+}
