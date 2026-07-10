@@ -456,6 +456,20 @@ function cgiForceBannerSize() {
   }
 }
 
+function cgiFetchFeaturedMediaUrl(slug) {
+  var pagesReq = fetch('https://cgiflorida.com/boys/wp-json/wp/v2/pages?slug=' + encodeURIComponent(slug) + '&_embed=wp:featuredmedia')
+    .then(function(r) { return r.json(); }).catch(function() { return []; });
+  var galleryReq = fetch('https://cgiflorida.com/boys/wp-json/wp/v2/camp_gallery?slug=' + encodeURIComponent(slug) + '&_embed=wp:featuredmedia')
+    .then(function(r) { return r.json(); }).catch(function() { return []; });
+  return Promise.all([pagesReq, galleryReq]).then(function(results) {
+    var combined = (Array.isArray(results[0]) ? results[0] : []).concat(Array.isArray(results[1]) ? results[1] : []);
+    if (!combined.length) return null;
+    var page = combined[0];
+    var media = page._embedded && page._embedded['wp:featuredmedia'] && page._embedded['wp:featuredmedia'][0];
+    return (media && media.source_url) ? media.source_url : null;
+  });
+}
+
 function cgiApplyBannerImage() {
   if (!cgiIsAlbumPage()) return;
   var parts = window.location.pathname.split('/').filter(Boolean);
@@ -467,14 +481,9 @@ function cgiApplyBannerImage() {
     cgiForceBannerSize();
     window.addEventListener('resize', cgiForceBannerSize);
   }
-  fetch('https://cgiflorida.com/boys/wp-json/wp/v2/pages?slug=' + encodeURIComponent(slug) + '&_embed=wp:featuredmedia')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!data || !data.length) return;
-      var page = data[0];
-      var media = page._embedded && page._embedded['wp:featuredmedia'] && page._embedded['wp:featuredmedia'][0];
-      if (!media || !media.source_url) return;
-      var url = media.source_url;
+  cgiFetchFeaturedMediaUrl(slug)
+    .then(function(url) {
+      if (!url) return;
       if (!holder) holder = document.querySelector('.edgtf-title-holder');
       if (!holder) return;
       holder.style.backgroundImage = 'url(' + url + ')';
