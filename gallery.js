@@ -434,33 +434,40 @@ window.cgiMasonryLayout = function() {
     requestAnimationFrame(function() { pending = false; doLayout(); });
   }
 
-  function bindImageListeners() {
-    container.querySelectorAll('img:not([data-cgi-masonry-bound])').forEach(function(img) {
-      img.setAttribute('data-cgi-masonry-bound', '1');
-      if (img.complete && img.naturalWidth) {
-        scheduleLayout();
-      } else {
-        img.addEventListener('load', scheduleLayout);
-        img.addEventListener('error', scheduleLayout);
-      }
-    });
-  }
-
-  bindImageListeners();
-  scheduleLayout();
-
-  if (!container.dataset.masonryObserverBound) {
-    container.dataset.masonryObserverBound = '1';
-    var observer = new MutationObserver(function() {
-      bindImageListeners();
+  container.querySelectorAll('img:not([data-cgi-masonry-bound])').forEach(function(img) {
+    img.setAttribute('data-cgi-masonry-bound', '1');
+    if (img.complete && img.naturalWidth) {
       scheduleLayout();
-    });
-    observer.observe(container, { childList: true });
-  }
+    } else {
+      img.addEventListener('load', scheduleLayout);
+      img.addEventListener('error', scheduleLayout);
+    }
+  });
+  scheduleLayout();
 };
+
+(function() {
+  var lastFigureCount = -1;
+  setInterval(function() {
+    if (!cgiIsAlbumPage()) return;
+    var container = document.querySelector('.photonic-standard-layout');
+    if (!container) return;
+    var count = container.querySelectorAll('figure').length;
+    if (count !== lastFigureCount) {
+      lastFigureCount = count;
+      window.cgiMasonryLayout();
+      cgiSetupThumbSelection();
+    }
+  }, 800);
+})();
 
 function cgiSizedUrl(src, code) {
   return src.replace(/\/[A-Z0-9]+\/([^\/]+)-[A-Z0-9]+\.jpg$/i, '/' + code + '/$1-' + code + '.jpg');
+}
+
+function cgiOriginalFilename(src) {
+  var m = src.match(/\/([^\/]+)-[A-Z0-9]+\.jpg$/i);
+  return m ? m[1] + '.jpg' : 'photo.jpg';
 }
 
 function cgiProxyUrl(url, filename) {
@@ -642,20 +649,16 @@ function showDownloadBar(){
   document.body.appendChild(bar);
 }
 
-setInterval(function(){if(!cgiIsAlbumPage())return;var c=document.querySelector('#bp_container');if(!c||parseFloat(window.getComputedStyle(c).opacity)<0.5)removeDownloadBar();},200);
-
-document.addEventListener('click',function(e){
-  if(e.target.closest&&e.target.closest('#cgi-dl'))return;
-  var attempts=0;
-  var poll=setInterval(function(){
-    attempts++;
-    var con=document.querySelector('#bp_container');
-    var img=con?con.querySelector('img'):null;
-    var ready=con&&img&&img.complete&&img.src&&parseFloat(window.getComputedStyle(con).opacity)>=0.5;
-    if(ready){showDownloadBar();clearInterval(poll);}
-    else if(attempts>25){clearInterval(poll);}
-  },150);
-});
+setInterval(function(){
+  if(!cgiIsAlbumPage())return;
+  var con=document.querySelector('#bp_container');
+  if(!con){removeDownloadBar();return;}
+  var opacity=parseFloat(window.getComputedStyle(con).opacity);
+  if(opacity<0.5){removeDownloadBar();return;}
+  var img=con.querySelector('img');
+  if(!img||!img.src||!img.complete)return;
+  showDownloadBar();
+},250);
 
 document.addEventListener('keydown',function(e){if(e.key==='Escape')removeDownloadBar();});
 
@@ -751,16 +754,21 @@ function cgiUpdateBatchBar() {
 function cgiBatchDownload(code, label) {
   var items = Array.from(window.cgiSelected);
   if (!items.length) return;
-  items.forEach(function(src, i) {
-    setTimeout(function() {
-      var fname = 'CGI-' + label + '-' + (i + 1) + '.jpg';
-      var a = document.createElement('a');
-      a.href = cgiProxyUrl(cgiSizedUrl(src, code), fname);
-      a.download = fname;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }, i * 500);
+  var usedNames = {};
+  items.forEach(function(src) {
+    var fname = cgiOriginalFilename(src);
+    if (usedNames[fname]) {
+      usedNames[fname]++;
+      fname = fname.replace(/(\.[^.]+)$/, ' (' + usedNames[fname] + ')$1');
+    } else {
+      usedNames[fname] = 1;
+    }
+    var a = document.createElement('a');
+    a.href = cgiProxyUrl(cgiSizedUrl(src, code), fname);
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   });
 }
 
