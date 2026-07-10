@@ -466,7 +466,14 @@ function cgiFetchFeaturedMediaUrl(slug) {
     if (!combined.length) return null;
     var page = combined[0];
     var media = page._embedded && page._embedded['wp:featuredmedia'] && page._embedded['wp:featuredmedia'][0];
-    return (media && media.source_url) ? media.source_url : null;
+    if (!media) return null;
+    var sizes = media.media_details && media.media_details.sizes;
+    if (sizes) {
+      if (sizes.large) return sizes.large.source_url;
+      if (sizes.medium_large) return sizes.medium_large.source_url;
+      if (sizes.medium) return sizes.medium.source_url;
+    }
+    return media.source_url || null;
   });
 }
 
@@ -550,7 +557,9 @@ setTimeout(function(){
   shareBtn.addEventListener('mouseout',function(){shareBtn.style.background='#a8c8e8';shareBtn.style.color='#2d5986';});
   shareBtn.addEventListener('click',function(e){
     e.preventDefault();
-    var shareUrl=window.location.href;
+    var parts=window.location.pathname.split('/').filter(Boolean);
+    var slug=parts[parts.length-1];
+    var shareUrl='https://cgi-photo-proxy.fishelkleinman.workers.dev/CGIFL/'+encodeURIComponent(slug);
     if(navigator.share){
       navigator.share({title:document.title,url:shareUrl}).catch(function(){});
     } else {
@@ -575,7 +584,7 @@ function showDownloadBar(){
   if(existing && existing.dataset.src===img.src) return;
   removeDownloadBar();
   var src=img.src,
-      wS=cgiSizedUrl(src,'M'),
+      wS=cgiSizedUrl(src,'L'),
       fS=cgiSizedUrl(src,'5K'),
       bar=document.createElement('div');
   bar.id='cgi-dl';
@@ -693,7 +702,7 @@ function cgiUpdateBatchBar() {
   count.textContent = n + ' Selected';
   var webBtn = document.createElement('a');
   webBtn.href = '#'; webBtn.textContent = 'Download Web Size'; webBtn.className = 'cgi-batch-btn';
-  webBtn.addEventListener('click', function(e) { e.preventDefault(); cgiBatchDownload('M', 'Web'); });
+  webBtn.addEventListener('click', function(e) { e.preventDefault(); cgiBatchDownload('L', 'Web'); });
   var fullBtn = document.createElement('a');
   fullBtn.href = '#'; fullBtn.textContent = 'Download Full Size'; fullBtn.className = 'cgi-batch-btn';
   fullBtn.addEventListener('click', function(e) { e.preventDefault(); cgiBatchDownload('5K', 'Full'); });
