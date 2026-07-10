@@ -398,6 +398,22 @@ function cgiInsertLoadMoreButton() {
   }, 250);
 })();
 
+(function() {
+  var loading = false;
+  function cgiCheckInfiniteScroll() {
+    var btn = document.getElementById('cgi-load-more');
+    if (!btn || btn.style.display === 'none' || loading) return;
+    var rect = btn.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 800) {
+      loading = true;
+      btn.click();
+      setTimeout(function() { loading = false; }, 600);
+    }
+  }
+  window.addEventListener('scroll', cgiCheckInfiniteScroll);
+  setInterval(cgiCheckInfiniteScroll, 500);
+})();
+
 window.cgiMasonryLayout = function() {
   if (!cgiIsAlbumPage()) return;
   var container = document.querySelector('.photonic-standard-layout');
@@ -508,15 +524,72 @@ function cgiFetchFeaturedMediaUrl(slug) {
     if (!combined.length) return null;
     var page = combined[0];
     var media = page._embedded && page._embedded['wp:featuredmedia'] && page._embedded['wp:featuredmedia'][0];
-    if (!media) return null;
-    var sizes = media.media_details && media.media_details.sizes;
-    if (sizes) {
-      if (sizes.large) return sizes.large.source_url;
-      if (sizes.medium_large) return sizes.medium_large.source_url;
-      if (sizes.medium) return sizes.medium.source_url;
+    var url = null;
+    if (media) {
+      var sizes = media.media_details && media.media_details.sizes;
+      if (sizes && sizes.large) url = sizes.large.source_url;
+      else if (sizes && sizes.medium_large) url = sizes.medium_large.source_url;
+      else if (sizes && sizes.medium) url = sizes.medium.source_url;
+      else url = media.source_url || null;
     }
-    return media.source_url || null;
+    return { url: url, date: page.date || null };
   });
+}
+
+function cgiFormatBannerDate(dateStr) {
+  if (!dateStr) return null;
+  var d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  var months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  var day = d.getDate();
+  var suffix = 'TH';
+  if (day % 10 === 1 && day !== 11) suffix = 'ST';
+  else if (day % 10 === 2 && day !== 12) suffix = 'ND';
+  else if (day % 10 === 3 && day !== 13) suffix = 'RD';
+  return months[d.getMonth()] + ' ' + day + suffix + ', ' + d.getFullYear();
+}
+
+function cgiApplyBannerExtras(dateStr) {
+  var holder = document.querySelector('.edgtf-title-holder');
+  if (!holder || holder.querySelector('.cgi-banner-extras')) return;
+
+  var wrap = document.createElement('div');
+  wrap.className = 'cgi-banner-extras';
+
+  var formattedDate = cgiFormatBannerDate(dateStr);
+  if (formattedDate) {
+    var sub = document.createElement('div');
+    sub.className = 'cgi-banner-subtitle';
+    sub.textContent = formattedDate;
+    wrap.appendChild(sub);
+  }
+
+  var viewBtn = document.createElement('a');
+  viewBtn.href = '#';
+  viewBtn.className = 'cgi-banner-view-btn';
+  viewBtn.textContent = 'View Gallery';
+  viewBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    var grid = document.querySelector('.photonic-standard-layout');
+    if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  wrap.appendChild(viewBtn);
+
+  var logoLink = document.createElement('a');
+  logoLink.href = 'https://cgiflorida.com/boys/gallery/';
+  logoLink.className = 'cgi-banner-logo-link';
+  var logoImg = document.createElement('img');
+  logoImg.src = 'https://cgiflorida.com/boys/wp-content/uploads/sites/2/2026/06/cropped-Untitled-design-23-192x192.png';
+  logoImg.alt = 'CGI Florida';
+  logoImg.className = 'cgi-banner-logo-img';
+  var logoText = document.createElement('span');
+  logoText.className = 'cgi-banner-logo-text';
+  logoText.textContent = "DOVI'S CGI FLORIDA";
+  logoLink.appendChild(logoImg);
+  logoLink.appendChild(logoText);
+  wrap.appendChild(logoLink);
+
+  holder.appendChild(wrap);
 }
 
 function cgiApplyBannerImage() {
@@ -531,11 +604,12 @@ function cgiApplyBannerImage() {
     window.addEventListener('resize', cgiForceBannerSize);
   }
   cgiFetchFeaturedMediaUrl(slug)
-    .then(function(url) {
-      if (!url) return;
+    .then(function(result) {
+      if (result && result.date) cgiApplyBannerExtras(result.date);
+      if (!result || !result.url) return;
       if (!holder) holder = document.querySelector('.edgtf-title-holder');
       if (!holder) return;
-      holder.style.backgroundImage = 'url(' + url + ')';
+      holder.style.backgroundImage = 'url(' + result.url + ')';
       holder.style.backgroundSize = 'cover';
       holder.style.backgroundPosition = 'center center';
       holder.style.backgroundRepeat = 'no-repeat';
@@ -546,27 +620,6 @@ function cgiApplyBannerImage() {
     .catch(function() {});
 }
 cgiApplyBannerImage();
-
-function cgiApplyBannerSubtitle() {
-  if (!cgiIsAlbumPage()) return;
-  var holder = document.querySelector('.edgtf-title-holder');
-  if (!holder || holder.querySelector('.cgi-banner-subtitle')) return;
-  var img = document.querySelector('.photonic-standard-layout img');
-  if (!img) return;
-  var src = img.getAttribute('src') || img.getAttribute('data-src') || '';
-  var division = src.indexOf('Main-Camp') > -1 ? 'Main Camp' : src.indexOf('Temimim') > -1 ? 'Temimim' : '';
-  var wm = src.match(/Week-(\d+)/i);
-  var week = wm ? 'Week ' + wm[1] : '';
-  var subtitle = division && week ? division + ' \xB7 ' + week : division || week || '';
-  if (!subtitle) return;
-  var sub = document.createElement('div');
-  sub.className = 'cgi-banner-subtitle';
-  sub.textContent = subtitle;
-  holder.appendChild(sub);
-}
-setTimeout(cgiApplyBannerSubtitle, 1200);
-setTimeout(cgiApplyBannerSubtitle, 2500);
-setTimeout(cgiApplyBannerSubtitle, 4000);
 
 function cgiGetOrCreateButtonRow(container) {
   var row = document.getElementById('cgi-button-row');
