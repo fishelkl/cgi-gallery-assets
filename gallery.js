@@ -473,6 +473,7 @@ window.cgiMasonryLayout = function() {
       lastFigureCount = count;
       window.cgiMasonryLayout();
       cgiSetupThumbSelection();
+      cgiSetupThumbIcons();
     }
   }, 800);
 })();
@@ -490,6 +491,50 @@ function cgiProxyUrl(url, filename) {
   var u = 'https://cgi-photo-proxy.fishelkleinman.workers.dev/?url=' + encodeURIComponent(url);
   if (filename) u += '&name=' + encodeURIComponent(filename);
   return u;
+}
+
+var CGI_ICONS = {
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
+  select: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="2"></rect><path d="M8 12l2 2 4-4"></path></svg>',
+  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"></line><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"></line></svg>'
+};
+
+function cgiMakeIconBtn(name, label) {
+  var btn = document.createElement('a');
+  btn.href = '#';
+  btn.className = 'cgi-icon-btn';
+  btn.setAttribute('aria-label', label);
+  btn.innerHTML = CGI_ICONS[name] || '';
+  return btn;
+}
+
+function cgiWireDownloadMenu(btn, menu) {
+  var open = false;
+  function onDocClick(e) {
+    if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) close();
+  }
+  function close() {
+    open = false;
+    menu.style.display = 'none';
+    document.removeEventListener('click', onDocClick);
+  }
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    open = !open;
+    menu.style.display = open ? 'flex' : 'none';
+    if (open) setTimeout(function() { document.addEventListener('click', onDocClick); }, 0);
+    else document.removeEventListener('click', onDocClick);
+  });
+}
+
+function cgiSharePhotoUrl(url) {
+  if (navigator.share) {
+    navigator.share({ url: url }).catch(function() {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).catch(function() {});
+  }
 }
 
 document.head.appendChild(Object.assign(document.createElement('link'), {rel:'stylesheet', href:'https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap'}));
@@ -664,41 +709,61 @@ function cgiApplyStickyButtonRow() {
 }
 window.addEventListener('resize', cgiApplyStickyButtonRow);
 
-setTimeout(function(){
-  if(!cgiIsAlbumPage())return;
-  var c=document.querySelector('.photonic-standard-layout');
-  if(!c)return;
-  var wrap=cgiGetOrCreateButtonRow(c);
-  var btnStyle='display:inline-block;background:#a8c8e8;color:#2d5986;font-family:Teko,sans-serif;font-size:18px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:12px 40px;border-radius:8px;text-decoration:none;transition:all 0.3s ease;cursor:pointer;';
-  var btn=document.createElement('a');
-  btn.href='https://cgiflorida.com/boys/gallery/';
-  btn.textContent='← Back';
-  btn.style.cssText=btnStyle;
-  btn.addEventListener('mouseover',function(){btn.style.background='#2d5986';btn.style.color='#fff';});
-  btn.addEventListener('mouseout',function(){btn.style.background='#a8c8e8';btn.style.color='#2d5986';});
-  wrap.appendChild(btn);
+function cgiBuildTopBar() {
+  if (!cgiIsAlbumPage()) return;
+  var c = document.querySelector('.photonic-standard-layout');
+  if (!c) return;
+  var row = cgiGetOrCreateButtonRow(c);
+  if (row.dataset.cgiBuilt) return;
+  row.dataset.cgiBuilt = '1';
 
-  var shareBtn=document.createElement('a');
-  shareBtn.href='#';
-  shareBtn.textContent='Share';
-  shareBtn.style.cssText=btnStyle;
-  shareBtn.addEventListener('mouseover',function(){shareBtn.style.background='#2d5986';shareBtn.style.color='#fff';});
-  shareBtn.addEventListener('mouseout',function(){shareBtn.style.background='#a8c8e8';shareBtn.style.color='#2d5986';});
-  shareBtn.addEventListener('click',function(e){
+  var backBtn = cgiMakeIconBtn('back', 'Back to galleries');
+  backBtn.href = 'https://cgiflorida.com/boys/gallery/';
+  row.appendChild(backBtn);
+
+  var selectBtn = cgiMakeIconBtn('select', 'Select photos');
+  selectBtn.id = 'cgi-select-toggle';
+  selectBtn.addEventListener('click', function(e) {
     e.preventDefault();
-    var shareUrl=window.location.href;
-    if(navigator.share){
-      navigator.share({title:document.title,url:shareUrl}).catch(function(){});
-    } else {
-      navigator.clipboard.writeText(shareUrl).then(function(){
-        shareBtn.textContent='Copied!';
-        setTimeout(function(){shareBtn.textContent='Share';},1500);
-      });
-    }
+    window.cgiSelectMode = !window.cgiSelectMode;
+    document.body.classList.toggle('cgi-select-active', window.cgiSelectMode);
+    selectBtn.classList.toggle('cgi-active', window.cgiSelectMode);
+    if (!window.cgiSelectMode) cgiClearSelection();
   });
-  wrap.appendChild(shareBtn);
+  row.appendChild(selectBtn);
+
+  var dlWrap = document.createElement('div');
+  dlWrap.id = 'cgi-topbar-dl';
+  dlWrap.className = 'cgi-topbar-dl';
+
+  var dlBtn = cgiMakeIconBtn('download', 'Download selected photos');
+  var dlCount = document.createElement('span');
+  dlCount.className = 'cgi-dl-count';
+  dlBtn.appendChild(dlCount);
+
+  var dlMenu = document.createElement('div');
+  dlMenu.className = 'cgi-dl-menu';
+  function mkMenuItem(label, code) {
+    var a = document.createElement('a');
+    a.href = '#';
+    a.textContent = label;
+    a.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cgiBatchDownload(code, label.indexOf('Full') > -1 ? 'Full' : 'Web');
+    });
+    return a;
+  }
+  dlMenu.appendChild(mkMenuItem('Web Size', 'L'));
+  dlMenu.appendChild(mkMenuItem('Full Size', '5K'));
+  cgiWireDownloadMenu(dlBtn, dlMenu);
+
+  dlWrap.appendChild(dlBtn);
+  dlWrap.appendChild(dlMenu);
+  row.appendChild(dlWrap);
+
   cgiApplyStickyButtonRow();
-},500);
+}
 
 function removeDownloadBar(){var b=document.getElementById('cgi-dl');if(b)b.remove();}
 
@@ -717,23 +782,33 @@ function showDownloadBar(){
       bar=document.createElement('div');
   bar.id='cgi-dl';
   bar.dataset.src=src;
-  bar.style.cssText='position:fixed;bottom:30px;right:30px;z-index:99999;display:flex;flex-direction:column;align-items:flex-end;gap:6px;';
-  var menu=document.createElement('div');
-  menu.style.cssText='display:none;flex-direction:column;gap:6px;margin-bottom:6px;';
-  function mkB(l,u){var a=document.createElement('a');var fname='CGI-'+l.replace(' ','-')+'.jpg';a.textContent=l;a.href=cgiProxyUrl(u,fname);a.download=fname;a.style.cssText='display:block;background:#a8c8e8;color:#2d5986;font-family:Teko,sans-serif;font-size:15px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:8px 24px;border-radius:8px;text-decoration:none;text-align:center;white-space:nowrap;';a.addEventListener('mouseover',function(){a.style.background='#2d5986';a.style.color='#fff';});a.addEventListener('mouseout',function(){a.style.background='#a8c8e8';a.style.color='#2d5986';});a.addEventListener('click',function(e){e.stopPropagation();});return a;}
-  menu.appendChild(mkB('Web Size',wS));
-  menu.appendChild(mkB('Full Size',fS));
-  var mb=document.createElement('div');
-  mb.style.cssText='background:#a8c8e8;color:#2d5986;font-family:Teko,sans-serif;font-size:18px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:12px 20px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;';
-  mb.textContent='⤓ Download';
-  var mo=false;
-  function oM(){mo=true;menu.style.display='flex';mb.style.background='#2d5986';mb.style.color='#fff';}
-  function cM(){mo=false;menu.style.display='none';mb.style.background='#a8c8e8';mb.style.color='#2d5986';}
-  mb.addEventListener('mouseenter',oM);
-  bar.addEventListener('mouseleave',cM);
-  mb.addEventListener('click',function(e){e.stopPropagation();mo?cM():oM();});
-  bar.appendChild(menu);
-  bar.appendChild(mb);
+
+  var dlBtn = cgiMakeIconBtn('download', 'Download photo');
+  var dlMenu = document.createElement('div');
+  dlMenu.className = 'cgi-dl-menu';
+  function mkB(l,u){
+    var a=document.createElement('a');
+    var fname='CGI-'+l.replace(' ','-')+'.jpg';
+    a.textContent=l;
+    a.href=cgiProxyUrl(u,fname);
+    a.download=fname;
+    a.addEventListener('click',function(e){e.stopPropagation();});
+    return a;
+  }
+  dlMenu.appendChild(mkB('Web Size',wS));
+  dlMenu.appendChild(mkB('Full Size',fS));
+  cgiWireDownloadMenu(dlBtn, dlMenu);
+
+  var shBtn = cgiMakeIconBtn('share', 'Share photo');
+  shBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    cgiSharePhotoUrl(wS);
+  });
+
+  bar.appendChild(dlBtn);
+  bar.appendChild(dlMenu);
+  bar.appendChild(shBtn);
   document.body.appendChild(bar);
 }
 
@@ -750,28 +825,6 @@ setInterval(function(){
 
 document.addEventListener('keydown',function(e){if(e.key==='Escape')removeDownloadBar();});
 
-function cgiInsertSelectToggle() {
-  if (!cgiIsAlbumPage()) return;
-  if (document.getElementById('cgi-select-toggle')) return;
-  var c = document.querySelector('.photonic-standard-layout');
-  if (!c) return;
-  var row = cgiGetOrCreateButtonRow(c);
-  var btn = document.createElement('a');
-  btn.id = 'cgi-select-toggle';
-  btn.href = '#';
-  btn.textContent = 'Select Photos';
-  btn.addEventListener('click', function(e) {
-    e.preventDefault();
-    window.cgiSelectMode = !window.cgiSelectMode;
-    document.body.classList.toggle('cgi-select-active', window.cgiSelectMode);
-    btn.classList.toggle('cgi-active', window.cgiSelectMode);
-    btn.textContent = window.cgiSelectMode ? 'Cancel Selecting' : 'Select Photos';
-    if (!window.cgiSelectMode) cgiClearSelection();
-  });
-  row.appendChild(btn);
-  cgiApplyStickyButtonRow();
-}
-
 function cgiSetupThumbSelection() {
   if (!cgiIsAlbumPage()) return;
   document.querySelectorAll('.photonic-standard-layout figure').forEach(function(fig) {
@@ -786,6 +839,51 @@ function cgiSetupThumbSelection() {
       e.stopPropagation();
       cgiToggleSelect(fig);
     }, true);
+  });
+}
+
+function cgiSetupThumbIcons() {
+  if (!cgiIsAlbumPage()) return;
+  document.querySelectorAll('.photonic-standard-layout figure').forEach(function(fig) {
+    if (fig.dataset.cgiIconsBound) return;
+    fig.dataset.cgiIconsBound = '1';
+
+    var wrap = document.createElement('div');
+    wrap.className = 'cgi-thumb-icons';
+
+    var dlBtn = cgiMakeIconBtn('download', 'Download photo');
+    dlBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var img = fig.querySelector('img');
+      var src = img ? (img.getAttribute('src') || img.getAttribute('data-src')) : null;
+      if (!src) return;
+      var url = cgiSizedUrl(src, 'L');
+      var fname = 'CGI-' + cgiOriginalFilename(src);
+      var a = document.createElement('a');
+      a.href = cgiProxyUrl(url, fname);
+      a.download = fname;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function() { if (a.parentNode) a.parentNode.removeChild(a); }, 1000);
+    });
+
+    var shBtn = cgiMakeIconBtn('share', 'Share photo');
+    shBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var img = fig.querySelector('img');
+      var src = img ? (img.getAttribute('src') || img.getAttribute('data-src')) : null;
+      if (!src) return;
+      cgiSharePhotoUrl(cgiSizedUrl(src, 'L'));
+    });
+
+    wrap.appendChild(dlBtn);
+    wrap.appendChild(shBtn);
+    fig.appendChild(wrap);
+
+    wrap.addEventListener('click', function(e) { e.stopPropagation(); }, true);
   });
 }
 
@@ -814,30 +912,15 @@ function cgiClearSelection() {
 
 function cgiUpdateBatchBar() {
   var n = window.cgiSelected.size;
-  var bar = document.getElementById('cgi-batch-dl');
-  if (!n) { if (bar) bar.remove(); return; }
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'cgi-batch-dl';
-    document.body.appendChild(bar);
+  var wrap = document.getElementById('cgi-topbar-dl');
+  if (!wrap) return;
+  wrap.classList.toggle('cgi-visible', n > 0);
+  var countEl = wrap.querySelector('.cgi-dl-count');
+  if (countEl) countEl.textContent = n > 0 ? n : '';
+  if (!n) {
+    var menu = wrap.querySelector('.cgi-dl-menu');
+    if (menu) menu.style.display = 'none';
   }
-  bar.innerHTML = '';
-  var count = document.createElement('div');
-  count.className = 'cgi-batch-count';
-  count.textContent = n + ' Selected';
-  var webBtn = document.createElement('a');
-  webBtn.href = '#'; webBtn.textContent = 'Download Web Size'; webBtn.className = 'cgi-batch-btn';
-  webBtn.addEventListener('click', function(e) { e.preventDefault(); cgiBatchDownload('L', 'Web'); });
-  var fullBtn = document.createElement('a');
-  fullBtn.href = '#'; fullBtn.textContent = 'Download Full Size'; fullBtn.className = 'cgi-batch-btn';
-  fullBtn.addEventListener('click', function(e) { e.preventDefault(); cgiBatchDownload('5K', 'Full'); });
-  var clearBtn = document.createElement('a');
-  clearBtn.href = '#'; clearBtn.textContent = 'Clear'; clearBtn.className = 'cgi-batch-clear';
-  clearBtn.addEventListener('click', function(e) { e.preventDefault(); cgiClearSelection(); });
-  bar.appendChild(count);
-  bar.appendChild(webBtn);
-  bar.appendChild(fullBtn);
-  bar.appendChild(clearBtn);
 }
 
 function cgiBatchDownload(code, label) {
@@ -873,7 +956,11 @@ setTimeout(cgiFixThumbnailLinksAsync,900);setTimeout(cgiFixThumbnailLinksAsync,2
 setTimeout(cgiUpdateVisibility,600);setTimeout(cgiUpdateVisibility,1600);setTimeout(cgiUpdateVisibility,3200);
 setTimeout(window.cgiMasonryLayout,300);
 window.addEventListener('resize',window.cgiMasonryLayout);
-setTimeout(cgiInsertSelectToggle, 500);
+setTimeout(cgiBuildTopBar, 500);
+setTimeout(cgiBuildTopBar, 1500);
 setTimeout(cgiSetupThumbSelection, 600);
 setTimeout(cgiSetupThumbSelection, 1600);
 setTimeout(cgiSetupThumbSelection, 3200);
+setTimeout(cgiSetupThumbIcons, 600);
+setTimeout(cgiSetupThumbIcons, 1600);
+setTimeout(cgiSetupThumbIcons, 3200);
