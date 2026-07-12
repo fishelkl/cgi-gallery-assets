@@ -196,7 +196,7 @@ window.cgiFixGallery = function() {
     var titleEl = thumb.querySelector('.photonic-title');
     var img = thumb.querySelector('img');
     if (fig) fig.style.cssText = 'position:absolute!important;bottom:' + (isMobile?'28px':'38px') + '!important;left:' + (isMobile?'10px':'18px') + '!important;right:' + (isMobile?'10px':'18px') + '!important;width:auto!important;height:auto!important;background:none!important;padding:0!important;z-index:2!important;overflow:visible!important;display:block!important;';
-    if (titleEl) titleEl.style.cssText = 'display:block!important;width:100%!important;color:#fff!important;text-transform:uppercase!important;letter-spacing:1px!important;line-height:1.1!important;margin:0!important;padding:0!important;font-size:' + (isMobile?'16px':'26px') + '!important;font-family:Teko,sans-serif!important;text-align:left!important;';
+    if (titleEl) titleEl.style.cssText = 'display:block!important;width:100%!important;color:#fff!important;text-transform:uppercase!important;letter-spacing:1px!important;line-height:1.1!important;margin:0!important;padding:0!important;font-size:' + (isMobile?'13px':'26px') + '!important;font-family:Teko,sans-serif!important;text-align:left!important;overflow-wrap:break-word!important;word-break:break-word!important;white-space:normal!important;box-sizing:border-box!important;';
     if (img) {
       var src = img.getAttribute('src') || img.getAttribute('data-src') || '';
       var division = src.indexOf('Main-Camp') > -1 ? 'Main Camp' : src.indexOf('Temimim') > -1 ? 'Temimim' : '';
