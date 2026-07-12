@@ -764,9 +764,9 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   html body .edgtf-title-holder h1,
   html body .edgtf-title-holder .edgtf-page-title,
   html body h1.edgtf-page-title {
-    font-size: 62px !important;
-    letter-spacing: 2px !important;
-    line-height: 1.05 !important;
+    font-size: 82px !important;
+    letter-spacing: 1.5px !important;
+    line-height: 1.02 !important;
   }
 
   html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-subtitle {
@@ -780,23 +780,30 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   }
 
   #gallery-filters {
-    flex-direction: column !important;
-    align-items: stretch !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
     flex-wrap: nowrap !important;
-    gap: 12px !important;
-    padding: 14px 16px !important;
+    gap: 12px 10px !important;
+    padding: 14px !important;
   }
 
   .gallery-filter-field {
     min-width: unset !important;
     width: 100% !important;
     flex: none !important;
+    gap: 3px !important;
+  }
+
+  .gallery-filter-label {
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
   }
 
   #gallery-filters select {
     width: 100% !important;
-    font-size: 16px !important;
-    padding: 10px 14px !important;
+    font-size: 14px !important;
+    padding: 9px 10px !important;
+    box-sizing: border-box !important;
   }
 
   #cgi-dl {
