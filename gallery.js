@@ -301,27 +301,59 @@ function cgiFixThumbnailLinksAsync() {
   }).catch(function() {});
 }
 
+function cgiResolveThumbLink(thumb, fallbackHref) {
+  var albumId = thumb.getAttribute('data-cgi-album-id');
+  if (!albumId) {
+    var link = thumb.querySelector('a');
+    var href = link ? (link.getAttribute('href') || '') : '';
+    try {
+      var hu = new URL(href, window.location.origin);
+      var b64 = hu.searchParams.get('photonic_gallery');
+      if (b64) {
+        var decoded = atob(b64);
+        var am = decoded.match(/album="([^"]+)"/);
+        if (am) albumId = am[1];
+      }
+    } catch (err) {}
+  }
+  return Promise.all([cgiFetchAlbumLinks(), cgiFetchAllPages()]).then(function(results) {
+    var albumLinks = results[0] || [];
+    var pages = results[1] || [];
+    if (albumId) {
+      var byAlbum = albumLinks.find(function(a) { return a.albumId === albumId; });
+      if (byAlbum) return byAlbum.link;
+    }
+    var titleKey = cgiSlugKey(thumb.getAttribute('data-cgi-title'));
+    var week = thumb.getAttribute('data-cgi-week') || '';
+    if (titleKey && pages.length) {
+      var byId = {};
+      pages.forEach(function(p) { byId[p.id] = p; });
+      var matches = pages.filter(function(p) {
+        return cgiSlugKey(cgiDecodeHtml(p.title && p.title.rendered)) === titleKey;
+      });
+      var chosen = matches[0];
+      if (matches.length > 1 && week) {
+        var weekMatch = matches.find(function(p) {
+          var parent = byId[p.parent];
+          return parent && parent.slug === 'week-' + week;
+        });
+        if (weekMatch) chosen = weekMatch;
+      }
+      if (chosen && chosen.link) return chosen.link;
+    }
+    return fallbackHref;
+  }).catch(function() { return fallbackHref; });
+}
+
 document.addEventListener('click', function(e) {
   var link = e.target.closest('.photonic-level-2.photonic-thumb a');
   if (!link) return;
+  var thumb = link.closest('.photonic-level-2.photonic-thumb');
+  if (!thumb) return;
   var href = link.getAttribute('href') || '';
-  if (href.indexOf('photonic_gallery=') === -1) return;
   e.preventDefault();
-  var albumId = null;
-  try {
-    var hu = new URL(href, window.location.origin);
-    var b64 = hu.searchParams.get('photonic_gallery');
-    if (b64) {
-      var decoded = atob(b64);
-      var am = decoded.match(/album="([^"]+)"/);
-      if (am) albumId = am[1];
-    }
-  } catch (err) {}
-  cgiFetchAlbumLinks().then(function(albumLinks) {
-    var match = albumId && albumLinks.find(function(a) { return a.albumId === albumId; });
-    window.location.href = match ? match.link : href;
-  }).catch(function() {
-    window.location.href = href;
+  cgiResolveThumbLink(thumb, href).then(function(finalUrl) {
+    window.location.href = finalUrl;
   });
 }, true);
 
@@ -695,17 +727,18 @@ function cgiApplyStickyButtonRow() {
   var row = document.getElementById('cgi-button-row');
   if (!row) return;
   row.style.position = 'fixed';
-  row.style.left = '0';
-  row.style.right = '0';
+  row.style.left = 'auto';
+  row.style.right = '20px';
   row.style.top = 'auto';
-  row.style.bottom = '0';
+  row.style.bottom = '20px';
   row.style.zIndex = '200';
-  row.style.background = '#fff';
-  row.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.08)';
+  row.style.background = 'transparent';
+  row.style.boxShadow = 'none';
   row.style.margin = '0';
-  row.style.padding = '10px 20px';
+  row.style.padding = '0';
+  row.style.width = 'auto';
   row.style.boxSizing = 'border-box';
-  document.body.style.paddingBottom = (row.offsetHeight + 10) + 'px';
+  document.body.style.paddingBottom = '0';
 }
 window.addEventListener('resize', cgiApplyStickyButtonRow);
 
