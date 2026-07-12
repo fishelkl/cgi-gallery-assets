@@ -402,10 +402,10 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
   display: flex !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 14px !important;
-  margin: 0 0 20px 0 !important;
-  width: 100% !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  width: auto !important;
 }
 
 /* =====================
