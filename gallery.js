@@ -500,6 +500,7 @@ window.cgiMasonryLayout = function() {
       cgiSetupThumbSelection();
       cgiSetupThumbIcons();
     }
+    if (!window.cgiBannerImageSet) cgiApplyAlbumCoverBanner();
   }, 800);
 })();
 
@@ -723,20 +724,29 @@ function cgiApplyBannerImage() {
   cgiFetchFeaturedMediaUrl(slug)
     .then(function(result) {
       if (result && result.date) cgiApplyBannerExtras(result.date);
-      if (!result || !result.url) return;
-      if (!holder) holder = document.querySelector('.edgtf-title-holder');
-      if (!holder) return;
-      holder.style.backgroundImage = 'url(' + result.url + ')';
-      holder.style.backgroundSize = 'cover';
-      holder.style.backgroundPosition = 'center center';
-      holder.style.backgroundRepeat = 'no-repeat';
-      cgiForceBannerSize();
-      setTimeout(cgiForceBannerSize, 800);
-      setTimeout(cgiForceBannerSize, 1800);
     })
     .catch(function() {});
 }
 cgiApplyBannerImage();
+
+window.cgiBannerImageSet = false;
+function cgiApplyAlbumCoverBanner() {
+  if (window.cgiBannerImageSet || !cgiIsAlbumPage()) return;
+  var img = document.querySelector('.photonic-standard-layout figure img');
+  if (!img) return;
+  var src = img.getAttribute('src') || img.getAttribute('data-src');
+  if (!src) return;
+  var holder = document.querySelector('.edgtf-title-holder');
+  if (!holder) return;
+  window.cgiBannerImageSet = true;
+  holder.style.backgroundImage = 'url(' + cgiSizedUrl(src, 'X3') + ')';
+  holder.style.backgroundSize = 'cover';
+  holder.style.backgroundPosition = 'center center';
+  holder.style.backgroundRepeat = 'no-repeat';
+  cgiForceBannerSize();
+  setTimeout(cgiForceBannerSize, 800);
+  setTimeout(cgiForceBannerSize, 1800);
+}
 
 function cgiGetOrCreateButtonRow(container) {
   var row = document.getElementById('cgi-button-row');
