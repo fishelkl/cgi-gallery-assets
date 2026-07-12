@@ -821,7 +821,7 @@ function showDownloadBar(){
   dlMenu.className = 'cgi-dl-menu';
   function mkB(l,u){
     var a=document.createElement('a');
-    var fname='CGI-'+l.replace(' ','-')+'.jpg';
+    var fname=cgiOriginalFilename(src);
     a.textContent=l;
     a.href=cgiProxyUrl(u,fname);
     a.download=fname;
