@@ -191,12 +191,12 @@ window.cgiFixGallery = function() {
         if (week) thumb.setAttribute('data-cgi-week', week);
       }
     }
-    if (thumb.querySelector('.custom-desc')) return;
     var fig = thumb.querySelector('figcaption.photonic-title-info');
     var titleEl = thumb.querySelector('.photonic-title');
     var img = thumb.querySelector('img');
     if (fig) fig.style.cssText = 'position:absolute!important;bottom:' + (isMobile?'28px':'38px') + '!important;left:' + (isMobile?'18px':'18px') + '!important;right:' + (isMobile?'18px':'18px') + '!important;width:auto!important;height:auto!important;background:none!important;padding:0!important;z-index:2!important;overflow:visible!important;display:block!important;';
     if (titleEl) titleEl.style.cssText = 'display:block!important;width:100%!important;color:#fff!important;text-transform:uppercase!important;letter-spacing:1px!important;line-height:1.1!important;margin:0!important;padding:0!important;font-size:' + (isMobile?'12px':'26px') + '!important;font-family:Teko,sans-serif!important;text-align:left!important;overflow-wrap:break-word!important;word-break:break-word!important;white-space:normal!important;box-sizing:border-box!important;';
+    if (thumb.querySelector('.custom-desc')) return;
     if (img) {
       var src = img.getAttribute('src') || img.getAttribute('data-src') || '';
       var division = src.indexOf('Main-Camp') > -1 ? 'Main Camp' : src.indexOf('Temimim') > -1 ? 'Temimim' : '';
@@ -1009,7 +1009,7 @@ function cgiBatchDownload(code, label) {
   setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); }, 2000);
 }
 
-setTimeout(window.cgiFixGallery,500);setTimeout(window.cgiFixGallery,1500);setTimeout(window.cgiFixGallery,3000);
+setTimeout(window.cgiFixGallery,500);setTimeout(window.cgiFixGallery,1500);setTimeout(window.cgiFixGallery,3000);setTimeout(window.cgiFixGallery,5000);setTimeout(window.cgiFixGallery,8000);
 setTimeout(cgiFixThumbnailLinksAsync,900);setTimeout(cgiFixThumbnailLinksAsync,2000);setTimeout(cgiFixThumbnailLinksAsync,4000);
 setTimeout(cgiUpdateVisibility,600);setTimeout(cgiUpdateVisibility,1600);setTimeout(cgiUpdateVisibility,3200);
 setTimeout(window.cgiMasonryLayout,300);
