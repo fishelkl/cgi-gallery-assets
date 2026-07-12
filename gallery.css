@@ -764,13 +764,14 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   html body .edgtf-title-holder h1,
   html body .edgtf-title-holder .edgtf-page-title,
   html body h1.edgtf-page-title {
-    font-size: 48px !important;
+    font-size: 62px !important;
     letter-spacing: 2px !important;
+    line-height: 1.05 !important;
   }
 
   html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-subtitle {
-    margin-top: 14px !important;
-    font-size: 17px !important;
+    margin-top: 18px !important;
+    font-size: 18px !important;
   }
 
   html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-bottom {
