@@ -488,6 +488,11 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
   z-index: 100;
 }
 
+.cgi-topbar-dl .cgi-dl-menu {
+  top: auto;
+  bottom: 50px;
+}
+
 .cgi-dl-menu a {
   display: block;
   background: #a8c8e8;
