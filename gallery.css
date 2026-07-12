@@ -198,6 +198,8 @@ html body .edgtf-title-holder.cgi-banner-has-image {
   justify-content: center !important;
   text-align: center !important;
   margin: 0 0 30px 0 !important;
+  padding: 0 30px !important;
+  box-sizing: border-box !important;
 }
 
 html body .edgtf-title-holder.cgi-banner-has-image + * {
@@ -755,21 +757,25 @@ a.photonic-more-button.photonic-more-dynamic:hover {
     padding-right: 10px !important;
   }
 
+  html body .edgtf-title-holder.cgi-banner-has-image {
+    padding: 0 20px !important;
+  }
+
   html body .edgtf-title-holder h1,
   html body .edgtf-title-holder .edgtf-page-title,
   html body h1.edgtf-page-title {
-    font-size: 38px !important;
+    font-size: 48px !important;
     letter-spacing: 2px !important;
   }
 
   html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-subtitle {
-    margin-top: 12px !important;
-    font-size: 16px !important;
+    margin-top: 14px !important;
+    font-size: 17px !important;
   }
 
   html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-bottom {
-    bottom: 24px !important;
-    gap: 8px !important;
+    bottom: 26px !important;
+    gap: 10px !important;
   }
 
   #gallery-filters {
