@@ -204,6 +204,19 @@ html body .edgtf-title-holder.cgi-banner-has-image + * {
   margin-top: 0 !important;
 }
 
+html body .edgtf-title-holder.cgi-banner-has-image::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  top: auto !important;
+  height: 65% !important;
+  background: linear-gradient(to top, rgba(45,89,134,0.9), rgba(45,89,134,0)) !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
 html body .edgtf-title-holder.cgi-banner-has-image * {
   position: static !important;
   float: none !important;
@@ -441,6 +454,7 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
 #cgi-button-row .cgi-icon-btn {
   background: #a8c8e8;
   color: #2d5986;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 #cgi-button-row .cgi-icon-btn:hover,
@@ -613,7 +627,7 @@ body.cgi-select-active .photonic-standard-layout figure a {
 
 @media (hover: none) {
   .cgi-thumb-icons {
-    opacity: 1;
+    display: none !important;
   }
 }
 
@@ -762,8 +776,16 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   }
 
   #cgi-dl {
-    top: 12px !important;
-    right: 12px !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  #cgi-dl .cgi-dl-menu {
+    top: auto !important;
+    bottom: 50px !important;
   }
 
   #cgi-button-row {
