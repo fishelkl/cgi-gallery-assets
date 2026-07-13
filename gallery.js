@@ -12,6 +12,27 @@ if (document.querySelector('.photonic-smug-stream, .photonic-level-2-container, 
   document.body.classList.add('cgi-gallery-page');
 }
 
+function cgiMarkImgLoaded(img) {
+  img.classList.add('cgi-img-loaded');
+  var thumb = img.closest('.photonic-level-2.photonic-thumb');
+  if (thumb) thumb.classList.add('cgi-thumb-ready');
+}
+
+function cgiGetLoadIndicator() {
+  var el = document.getElementById('cgi-load-indicator');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'cgi-load-indicator';
+  el.innerHTML = '<span class="cgi-dot"></span><span class="cgi-dot"></span><span class="cgi-dot"></span><span>Loading more</span>';
+  document.body.appendChild(el);
+  return el;
+}
+function cgiShowLoadIndicator() { cgiGetLoadIndicator().classList.add('cgi-visible'); }
+function cgiHideLoadIndicator() {
+  var el = document.getElementById('cgi-load-indicator');
+  if (el) el.classList.remove('cgi-visible');
+}
+
 function cgiEnsureAlbumOrderInit(container) {
   if (!window.cgiAlbumOrder.length) {
     window.cgiAlbumOrder = Array.from(container.querySelectorAll(':scope > .photonic-level-2.photonic-thumb'));
@@ -196,6 +217,13 @@ window.cgiFixGallery = function() {
     var img = thumb.querySelector('img');
     if (fig) fig.style.cssText = 'position:absolute!important;bottom:' + (isMobile?'28px':'38px') + '!important;left:' + (isMobile?'18px':'18px') + '!important;right:' + (isMobile?'18px':'18px') + '!important;width:auto!important;height:auto!important;background:none!important;padding:0!important;z-index:2!important;overflow:visible!important;display:block!important;';
     if (titleEl) titleEl.style.cssText = 'display:block!important;width:100%!important;color:#fff!important;text-transform:uppercase!important;letter-spacing:1px!important;line-height:1.02!important;margin:0!important;padding:0!important;font-size:' + (isMobile?'25px':'26px') + '!important;font-family:Teko,sans-serif!important;text-align:left!important;overflow-wrap:break-word!important;word-break:break-word!important;white-space:normal!important;box-sizing:border-box!important;';
+    if (img && img.complete && img.naturalWidth) {
+      cgiMarkImgLoaded(img);
+    } else if (img && !img.dataset.cgiLoadBound) {
+      img.dataset.cgiLoadBound = '1';
+      img.addEventListener('load', function() { cgiMarkImgLoaded(img); });
+      img.addEventListener('error', function() { cgiMarkImgLoaded(img); });
+    }
     if (thumb.querySelector('.custom-desc')) return;
     if (img) {
       var src = img.getAttribute('src') || img.getAttribute('data-src') || '';
@@ -355,6 +383,7 @@ function cgiLoadMoreAlbums(container, btn) {
   var provider = container.getAttribute('data-photonic-platform');
   if (!query || !provider) { btn.style.display = 'none'; return; }
   btn.textContent = 'Loading...';
+  cgiShowLoadIndicator();
   fetch('https://cgiflorida.com/boys/wp-admin/admin-ajax.php', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -379,8 +408,10 @@ function cgiLoadMoreAlbums(container, btn) {
     cgiUpdateVisibility();
     cgiFixThumbnailLinksAsync();
     btn.textContent = 'Load More';
+    cgiHideLoadIndicator();
   }).catch(function() {
     btn.textContent = 'Load More';
+    cgiHideLoadIndicator();
   });
 }
 
@@ -445,17 +476,18 @@ function cgiInsertLoadMoreButton() {
   function cgiCheckAlbumInfiniteScroll() {
     if (!cgiIsAlbumPage()) return;
     var btn = document.querySelector('.photonic-smug-stream > a.photonic-more-button.photonic-more-dynamic, .photonic-stream > a.photonic-more-button.photonic-more-dynamic');
-    if (!btn || btn.offsetParent === null) { loadingAlbumMore = false; return; }
+    if (!btn || btn.offsetParent === null) { loadingAlbumMore = false; cgiHideLoadIndicator(); return; }
     var container = document.querySelector('.photonic-standard-layout');
     var currentCount = container ? container.querySelectorAll('figure').length : 0;
     if (loadingAlbumMore) {
-      if (currentCount !== countAtLastClick) loadingAlbumMore = false;
+      if (currentCount !== countAtLastClick) { loadingAlbumMore = false; cgiHideLoadIndicator(); }
       else return;
     }
     var rect = btn.getBoundingClientRect();
     if (rect.top < window.innerHeight + 800) {
       loadingAlbumMore = true;
       countAtLastClick = currentCount;
+      cgiShowLoadIndicator();
       btn.click();
     }
   }
@@ -502,10 +534,11 @@ window.cgiMasonryLayout = function() {
   container.querySelectorAll('img:not([data-cgi-masonry-bound])').forEach(function(img) {
     img.setAttribute('data-cgi-masonry-bound', '1');
     if (img.complete && img.naturalWidth) {
+      cgiMarkImgLoaded(img);
       scheduleLayout();
     } else {
-      img.addEventListener('load', scheduleLayout);
-      img.addEventListener('error', scheduleLayout);
+      img.addEventListener('load', function() { cgiMarkImgLoaded(img); scheduleLayout(); });
+      img.addEventListener('error', function() { cgiMarkImgLoaded(img); scheduleLayout(); });
     }
   });
   scheduleLayout();
