@@ -441,15 +441,22 @@ function cgiInsertLoadMoreButton() {
 
 (function() {
   var loadingAlbumMore = false;
+  var countAtLastClick = -1;
   function cgiCheckAlbumInfiniteScroll() {
-    if (!cgiIsAlbumPage() || loadingAlbumMore) return;
+    if (!cgiIsAlbumPage()) return;
     var btn = document.querySelector('.photonic-smug-stream > a.photonic-more-button.photonic-more-dynamic, .photonic-stream > a.photonic-more-button.photonic-more-dynamic');
-    if (!btn || btn.offsetParent === null) return;
+    if (!btn || btn.offsetParent === null) { loadingAlbumMore = false; return; }
+    var container = document.querySelector('.photonic-standard-layout');
+    var currentCount = container ? container.querySelectorAll('figure').length : 0;
+    if (loadingAlbumMore) {
+      if (currentCount !== countAtLastClick) loadingAlbumMore = false;
+      else return;
+    }
     var rect = btn.getBoundingClientRect();
     if (rect.top < window.innerHeight + 800) {
       loadingAlbumMore = true;
+      countAtLastClick = currentCount;
       btn.click();
-      setTimeout(function() { loadingAlbumMore = false; }, 800);
     }
   }
   window.addEventListener('scroll', cgiCheckAlbumInfiniteScroll);
@@ -746,6 +753,11 @@ function cgiApplyBannerImage() {
 }
 cgiApplyBannerImage();
 
+function cgiExtractAlbumPathPrefix(src) {
+  var m = src.match(/^(https:\/\/photos\.smugmug\.com\/[^\/]+\/[^\/]+\/[^\/]+\/[^\/]+)\//);
+  return m ? m[1] : null;
+}
+
 window.cgiBannerImageSet = false;
 function cgiApplyAlbumCoverBanner() {
   if (window.cgiBannerImageSet || !cgiIsAlbumPage()) return;
@@ -756,13 +768,34 @@ function cgiApplyAlbumCoverBanner() {
   var holder = document.querySelector('.edgtf-title-holder');
   if (!holder) return;
   window.cgiBannerImageSet = true;
-  holder.style.backgroundImage = 'url(' + cgiSizedUrl(src, 'X3') + ')';
-  holder.style.backgroundSize = 'cover';
-  holder.style.backgroundPosition = 'center center';
-  holder.style.backgroundRepeat = 'no-repeat';
-  cgiForceBannerSize();
-  setTimeout(cgiForceBannerSize, 800);
-  setTimeout(cgiForceBannerSize, 1800);
+
+  function applyBg(finalSrc) {
+    holder.style.backgroundImage = 'url(' + cgiSizedUrl(finalSrc, 'X3') + ')';
+    holder.style.backgroundSize = 'cover';
+    holder.style.backgroundPosition = 'center center';
+    holder.style.backgroundRepeat = 'no-repeat';
+    cgiForceBannerSize();
+    setTimeout(cgiForceBannerSize, 800);
+    setTimeout(cgiForceBannerSize, 1800);
+  }
+
+  var prefix = cgiExtractAlbumPathPrefix(src);
+  if (!prefix) { applyBg(src); return; }
+
+  fetch('https://cgiflorida.com/boys/gallery/?cgi_nocache=' + Date.now())
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var scratch = document.createElement('div');
+      scratch.innerHTML = html;
+      var listingImgs = scratch.querySelectorAll('.photonic-level-2.photonic-thumb img');
+      var match = null;
+      for (var i = 0; i < listingImgs.length; i++) {
+        var lsrc = listingImgs[i].getAttribute('src') || listingImgs[i].getAttribute('data-src') || '';
+        if (lsrc.indexOf(prefix) === 0) { match = lsrc; break; }
+      }
+      applyBg(match || src);
+    })
+    .catch(function() { applyBg(src); });
 }
 
 function cgiGetOrCreateButtonRow(container) {
