@@ -791,6 +791,16 @@ function cgiExtractAlbumPathPrefix(src) {
   return m ? m[1] : null;
 }
 
+window.cgiListingPagePromise = null;
+function cgiFetchListingPage() {
+  if (window.cgiListingPagePromise) return window.cgiListingPagePromise;
+  window.cgiListingPagePromise = fetch('https://cgiflorida.com/boys/gallery/?cgi_nocache=' + Date.now())
+    .then(function(r) { return r.text(); })
+    .catch(function() { return null; });
+  return window.cgiListingPagePromise;
+}
+if (cgiIsAlbumPage()) cgiFetchListingPage();
+
 window.cgiBannerImageSet = false;
 function cgiApplyAlbumCoverBanner() {
   if (window.cgiBannerImageSet || !cgiIsAlbumPage()) return;
@@ -812,12 +822,14 @@ function cgiApplyAlbumCoverBanner() {
     setTimeout(cgiForceBannerSize, 1800);
   }
 
-  var prefix = cgiExtractAlbumPathPrefix(src);
-  if (!prefix) { applyBg(src); return; }
+  applyBg(src);
 
-  fetch('https://cgiflorida.com/boys/gallery/?cgi_nocache=' + Date.now())
-    .then(function(r) { return r.text(); })
+  var prefix = cgiExtractAlbumPathPrefix(src);
+  if (!prefix) return;
+
+  cgiFetchListingPage()
     .then(function(html) {
+      if (!html) return;
       var scratch = document.createElement('div');
       scratch.innerHTML = html;
       var listingImgs = scratch.querySelectorAll('.photonic-level-2.photonic-thumb img');
@@ -826,9 +838,9 @@ function cgiApplyAlbumCoverBanner() {
         var lsrc = listingImgs[i].getAttribute('src') || listingImgs[i].getAttribute('data-src') || '';
         if (lsrc.indexOf(prefix) === 0) { match = lsrc; break; }
       }
-      applyBg(match || src);
+      if (match && match !== src) applyBg(match);
     })
-    .catch(function() { applyBg(src); });
+    .catch(function() {});
 }
 
 function cgiGetOrCreateButtonRow(container) {
@@ -1107,6 +1119,7 @@ setTimeout(cgiFixThumbnailLinksAsync,900);setTimeout(cgiFixThumbnailLinksAsync,2
 setTimeout(cgiUpdateVisibility,600);setTimeout(cgiUpdateVisibility,1600);setTimeout(cgiUpdateVisibility,3200);
 setTimeout(window.cgiMasonryLayout,300);
 window.addEventListener('resize',window.cgiMasonryLayout);
+setTimeout(cgiApplyAlbumCoverBanner,150);setTimeout(cgiApplyAlbumCoverBanner,350);setTimeout(cgiApplyAlbumCoverBanner,600);
 setTimeout(cgiBuildTopBar, 500);
 setTimeout(cgiBuildTopBar, 1500);
 setTimeout(cgiSetupThumbSelection, 600);
