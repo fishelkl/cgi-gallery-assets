@@ -284,6 +284,7 @@ function cgiFetchAlbumLinks() {
     .catch(function() { return []; });
   return window.cgiAlbumLinksPromise;
 }
+if (cgiIsAlbumPage()) cgiFetchAlbumLinks();
 
 function cgiResolveByPagesTitle(thumb, pages) {
   var byId = {};
@@ -801,27 +802,20 @@ function cgiFetchListingPage() {
 }
 if (cgiIsAlbumPage()) cgiFetchListingPage();
 
-window.cgiBannerImageSet = false;
-function cgiApplyAlbumCoverBanner() {
-  if (window.cgiBannerImageSet || !cgiIsAlbumPage()) return;
+function cgiGetCurrentAlbumId() {
+  var container = document.querySelector('.photonic-standard-layout');
+  var query = container ? container.getAttribute('data-photonic-query') : null;
+  if (!query) return null;
+  var m = query.match(/(?:^|&)album=([^&]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+function cgiApplyAlbumCoverBannerFallback(holder, applyBg) {
   var img = document.querySelector('.photonic-standard-layout figure img');
   if (!img) return;
   var src = img.getAttribute('src') || img.getAttribute('data-src');
   if (!src) return;
-  var holder = document.querySelector('.edgtf-title-holder');
-  if (!holder) return;
   window.cgiBannerImageSet = true;
-
-  function applyBg(finalSrc) {
-    holder.style.backgroundImage = 'url(' + cgiSizedUrl(finalSrc, 'X2') + ')';
-    holder.style.backgroundSize = 'cover';
-    holder.style.backgroundPosition = 'center center';
-    holder.style.backgroundRepeat = 'no-repeat';
-    cgiForceBannerSize();
-    setTimeout(cgiForceBannerSize, 800);
-    setTimeout(cgiForceBannerSize, 1800);
-  }
-
   applyBg(src);
 
   var prefix = cgiExtractAlbumPathPrefix(src);
@@ -841,6 +835,39 @@ function cgiApplyAlbumCoverBanner() {
       if (match && match !== src) applyBg(match);
     })
     .catch(function() {});
+}
+
+window.cgiBannerImageSet = false;
+function cgiApplyAlbumCoverBanner() {
+  if (window.cgiBannerImageSet || !cgiIsAlbumPage()) return;
+  var holder = document.querySelector('.edgtf-title-holder');
+  if (!holder) return;
+
+  function applyBg(finalSrc) {
+    holder.style.backgroundImage = 'url(' + cgiSizedUrl(finalSrc, 'X2') + ')';
+    holder.style.backgroundSize = 'cover';
+    holder.style.backgroundPosition = 'center center';
+    holder.style.backgroundRepeat = 'no-repeat';
+    cgiForceBannerSize();
+    setTimeout(cgiForceBannerSize, 800);
+    setTimeout(cgiForceBannerSize, 1800);
+  }
+
+  var albumId = cgiGetCurrentAlbumId();
+  if (!albumId) { cgiApplyAlbumCoverBannerFallback(holder, applyBg); return; }
+
+  cgiFetchAlbumLinks().then(function(albumLinks) {
+    if (window.cgiBannerImageSet) return;
+    var entry = albumLinks.find(function(a) { return a.albumId === albumId; });
+    if (entry && entry.cover) {
+      window.cgiBannerImageSet = true;
+      applyBg(entry.cover);
+    } else {
+      cgiApplyAlbumCoverBannerFallback(holder, applyBg);
+    }
+  }).catch(function() {
+    if (!window.cgiBannerImageSet) cgiApplyAlbumCoverBannerFallback(holder, applyBg);
+  });
 }
 
 function cgiGetOrCreateButtonRow(container) {
