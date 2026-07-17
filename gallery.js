@@ -813,7 +813,7 @@ function cgiApplyAlbumCoverBanner() {
   window.cgiBannerImageSet = true;
 
   function applyBg(finalSrc) {
-    holder.style.backgroundImage = 'url(' + cgiSizedUrl(finalSrc, 'X3') + ')';
+    holder.style.backgroundImage = 'url(' + cgiSizedUrl(finalSrc, 'X2') + ')';
     holder.style.backgroundSize = 'cover';
     holder.style.backgroundPosition = 'center center';
     holder.style.backgroundRepeat = 'no-repeat';
