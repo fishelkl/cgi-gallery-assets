@@ -712,17 +712,9 @@ function cgiSmoothScrollTo(target) {
   requestAnimationFrame(step);
 }
 
-function cgiApplyBannerExtras(dateStr) {
+function cgiApplyBannerStatic() {
   var holder = document.querySelector('.edgtf-title-holder');
   if (!holder || holder.querySelector('.cgi-banner-bottom')) return;
-
-  var formattedDate = cgiFormatBannerDate(dateStr);
-  if (formattedDate) {
-    var sub = document.createElement('div');
-    sub.className = 'cgi-banner-subtitle';
-    sub.textContent = formattedDate;
-    holder.appendChild(sub);
-  }
 
   var bottomWrap = document.createElement('div');
   bottomWrap.className = 'cgi-banner-bottom';
@@ -755,22 +747,55 @@ function cgiApplyBannerExtras(dateStr) {
   holder.appendChild(bottomWrap);
 }
 
-function cgiApplyBannerImage() {
-  if (!cgiIsAlbumPage()) return;
+window.cgiBannerDateSet = false;
+function cgiApplyBannerDate(dateStr) {
+  if (window.cgiBannerDateSet) return;
+  var holder = document.querySelector('.edgtf-title-holder');
+  if (!holder || holder.querySelector('.cgi-banner-subtitle')) return;
+  var formattedDate = cgiFormatBannerDate(dateStr);
+  if (!formattedDate) return;
+  window.cgiBannerDateSet = true;
+  var sub = document.createElement('div');
+  sub.className = 'cgi-banner-subtitle';
+  sub.textContent = formattedDate;
+  holder.appendChild(sub);
+}
+
+function cgiApplyBannerDateFallback() {
   var parts = window.location.pathname.split('/').filter(Boolean);
   var slug = parts[parts.length - 1];
   if (!slug) return;
+  cgiFetchFeaturedMediaUrl(slug)
+    .then(function(result) {
+      if (result && result.date) cgiApplyBannerDate(result.date);
+    })
+    .catch(function() {});
+}
+
+function cgiApplyBannerImage() {
+  if (!cgiIsAlbumPage()) return;
   var holder = document.querySelector('.edgtf-title-holder');
   if (holder) {
     holder.classList.add('cgi-banner-has-image');
     cgiForceBannerSize();
     window.addEventListener('resize', cgiForceBannerSize);
   }
-  cgiFetchFeaturedMediaUrl(slug)
-    .then(function(result) {
-      if (result && result.date) cgiApplyBannerExtras(result.date);
-    })
-    .catch(function() {});
+  cgiApplyBannerStatic();
+
+  var albumId = cgiGetCurrentAlbumId();
+  if (!albumId) { cgiApplyBannerDateFallback(); return; }
+
+  cgiFetchAlbumLinks().then(function(albumLinks) {
+    if (window.cgiBannerDateSet) return;
+    var entry = albumLinks.find(function(a) { return a.albumId === albumId; });
+    if (entry && entry.date) {
+      cgiApplyBannerDate(entry.date);
+    } else {
+      cgiApplyBannerDateFallback();
+    }
+  }).catch(function() {
+    cgiApplyBannerDateFallback();
+  });
 }
 cgiApplyBannerImage();
 
