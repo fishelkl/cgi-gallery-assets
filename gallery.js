@@ -966,11 +966,26 @@ function cgiBuildTopBar() {
 
 function removeDownloadBar(){var b=document.getElementById('cgi-dl');if(b)b.remove();}
 
+function cgiGetActiveLightboxImage(con){
+  var imgs = con.querySelectorAll('img');
+  if (imgs.length <= 1) return imgs[0] || null;
+  var visible = null;
+  for (var i = 0; i < imgs.length; i++) {
+    var img = imgs[i];
+    if (img.offsetParent === null) continue;
+    var style = window.getComputedStyle(img);
+    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) < 0.5) continue;
+    var rect = img.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) visible = img;
+  }
+  return visible || imgs[imgs.length - 1];
+}
+
 function showDownloadBar(){
   if(!cgiIsAlbumPage())return;
   var con=document.querySelector('#bp_container');
   if(!con||parseFloat(window.getComputedStyle(con).opacity)<0.5)return;
-  var img=con.querySelector('img');
+  var img=cgiGetActiveLightboxImage(con);
   if(!img||!img.src)return;
   var existing=document.getElementById('cgi-dl');
   if(existing && existing.dataset.src===img.src) return;
@@ -1017,7 +1032,7 @@ setInterval(function(){
   if(!con){removeDownloadBar();return;}
   var opacity=parseFloat(window.getComputedStyle(con).opacity);
   if(opacity<0.5){removeDownloadBar();return;}
-  var img=con.querySelector('img');
+  var img=cgiGetActiveLightboxImage(con);
   if(!img||!img.src||!img.complete)return;
   showDownloadBar();
 },250);
@@ -1122,9 +1137,13 @@ function cgiSetupThumbIcons() {
       a.href = cgiProxyUrl(url, fname);
       a.download = fname;
       a.style.display = 'none';
+      window.cgiSuppressObserver = (window.cgiSuppressObserver || 0) + 1;
       document.body.appendChild(a);
       a.click();
-      setTimeout(function() { if (a.parentNode) a.parentNode.removeChild(a); }, 1000);
+      setTimeout(function() {
+        if (a.parentNode) a.parentNode.removeChild(a);
+        window.cgiSuppressObserver = Math.max(0, (window.cgiSuppressObserver || 0) - 1);
+      }, 1000);
     });
 
     var shBtn = cgiMakeIconBtn('share', 'Share photo');
@@ -1204,9 +1223,13 @@ function cgiBatchDownload(code, label) {
   input.name = 'payload';
   input.value = JSON.stringify({ items: payloadItems, zipName: 'CGI-' + label + '-Photos.zip' });
   form.appendChild(input);
+  window.cgiSuppressObserver = (window.cgiSuppressObserver || 0) + 1;
   document.body.appendChild(form);
   form.submit();
-  setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); }, 2000);
+  setTimeout(function() {
+    if (form.parentNode) form.parentNode.removeChild(form);
+    window.cgiSuppressObserver = Math.max(0, (window.cgiSuppressObserver || 0) - 1);
+  }, 2000);
 }
 
 window.addEventListener('resize', window.cgiMasonryLayout);
@@ -1228,6 +1251,7 @@ function cgiRunAllFixes() {
   }
 }
 
+window.cgiSuppressObserver = 0;
 (function() {
   var scheduled = false;
   function scheduleRun() {
@@ -1235,6 +1259,7 @@ function cgiRunAllFixes() {
     scheduled = true;
     requestAnimationFrame(function() {
       scheduled = false;
+      if (window.cgiSuppressObserver > 0) return;
       cgiRunAllFixes();
     });
   }
