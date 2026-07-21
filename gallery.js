@@ -927,10 +927,7 @@ function cgiBuildTopBar() {
   selectBtn.id = 'cgi-select-toggle';
   selectBtn.addEventListener('click', function(e) {
     e.preventDefault();
-    window.cgiSelectMode = !window.cgiSelectMode;
-    document.body.classList.toggle('cgi-select-active', window.cgiSelectMode);
-    selectBtn.classList.toggle('cgi-active', window.cgiSelectMode);
-    if (!window.cgiSelectMode) cgiClearSelection();
+    cgiSetSelectMode(!window.cgiSelectMode);
   });
   row.appendChild(selectBtn);
 
@@ -1027,6 +1024,14 @@ setInterval(function(){
 
 document.addEventListener('keydown',function(e){if(e.key==='Escape')removeDownloadBar();});
 
+function cgiSetSelectMode(active) {
+  window.cgiSelectMode = active;
+  document.body.classList.toggle('cgi-select-active', active);
+  var btn = document.getElementById('cgi-select-toggle');
+  if (btn) btn.classList.toggle('cgi-active', active);
+  if (!active) cgiClearSelection();
+}
+
 function cgiSetupThumbSelection() {
   if (!cgiIsAlbumPage()) return;
   document.querySelectorAll('.photonic-standard-layout figure').forEach(function(fig) {
@@ -1036,11 +1041,62 @@ function cgiSetupThumbSelection() {
     box.className = 'cgi-select-box';
     fig.appendChild(box);
     fig.addEventListener('click', function(e) {
+      if (fig.dataset.cgiSuppressClick) {
+        delete fig.dataset.cgiSuppressClick;
+        return;
+      }
       if (!window.cgiSelectMode) return;
       e.preventDefault();
       e.stopPropagation();
       cgiToggleSelect(fig);
     }, true);
+
+    var longPressTimer = null;
+    var longPressTriggered = false;
+    var startX = 0, startY = 0;
+    fig.addEventListener('touchstart', function(e) {
+      if (window.cgiSelectMode || !e.touches || !e.touches.length) return;
+      longPressTriggered = false;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      longPressTimer = setTimeout(function() {
+        longPressTimer = null;
+        longPressTriggered = true;
+        cgiSetSelectMode(true);
+        cgiToggleSelect(fig);
+        if (navigator.vibrate) navigator.vibrate(15);
+      }, 500);
+    }, { passive: true });
+    fig.addEventListener('touchmove', function(e) {
+      if (!longPressTimer || !e.touches || !e.touches.length) return;
+      var dx = e.touches[0].clientX - startX;
+      var dy = e.touches[0].clientY - startY;
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    }, { passive: true });
+    fig.addEventListener('touchend', function(e) {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+      if (longPressTriggered) {
+        longPressTriggered = false;
+        fig.dataset.cgiSuppressClick = '1';
+        e.preventDefault();
+      }
+    });
+    fig.addEventListener('touchcancel', function() {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+      longPressTriggered = false;
+    });
+    fig.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
   });
 }
 
