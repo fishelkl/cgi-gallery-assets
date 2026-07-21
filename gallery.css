@@ -418,6 +418,9 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
   border-radius: 10px !important;
   opacity: 0 !important;
   transition: transform 0.3s ease, opacity 0.4s ease !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
 }
 
 .photonic-standard-layout figure img.cgi-img-loaded {
@@ -865,6 +868,10 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   .cgi-icon-btn {
     width: 38px !important;
     height: 38px !important;
+  }
+
+  body.cgi-gallery-page #edgtf-back-to-top {
+    bottom: 90px !important;
   }
 }
 
