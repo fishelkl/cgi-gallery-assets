@@ -36,6 +36,22 @@
   column-gap: unset !important;
 }
 
+.photonic-smug-stream,
+.photonic-stream {
+  opacity: 1;
+}
+
+.photonic-smug-stream:not(.cgi-ready),
+.photonic-stream:not(.cgi-ready) {
+  opacity: 0 !important;
+}
+
+.photonic-smug-stream.cgi-ready,
+.photonic-stream.cgi-ready {
+  opacity: 1 !important;
+  transition: opacity 0.25s ease !important;
+}
+
 .photonic-level-2-container.photonic-standard-layout {
   columns: unset !important;
   column-count: unset !important;
@@ -474,8 +490,8 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
   display: flex !important;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   flex: none !important;
   border-radius: 50%;
   background: rgba(0,0,0,0.5);
@@ -486,8 +502,8 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
 }
 
 .cgi-icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .cgi-icon-btn:hover {
@@ -866,8 +882,13 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   }
 
   .cgi-icon-btn {
-    width: 38px !important;
-    height: 38px !important;
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .cgi-icon-btn svg {
+    width: 23px !important;
+    height: 23px !important;
   }
 
   body.cgi-gallery-page #edgtf-back-to-top {
@@ -892,8 +913,8 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   }
 
   .cgi-icon-btn {
-    width: 36px !important;
-    height: 36px !important;
+    width: 48px !important;
+    height: 48px !important;
   }
 }
 
@@ -923,20 +944,21 @@ body.single-camp_gallery .edgtf-post-image {
 #cgi-load-indicator {
   position: fixed;
   left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%) translateY(20px);
+  top: 20px;
+  bottom: auto;
+  transform: translateX(-50%) translateY(-14px);
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #2d5986;
+  gap: 9px;
+  background: rgba(30,30,30,0.88);
   color: #fff;
   font-family: 'Teko', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  padding: 8px 20px;
+  padding: 9px 22px;
   border-radius: 30px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
   z-index: 300;
   opacity: 0;
   pointer-events: none;
@@ -946,6 +968,10 @@ body.single-camp_gallery .edgtf-post-image {
 #cgi-load-indicator.cgi-visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+#cgi-load-indicator .cgi-load-text {
+  white-space: nowrap;
 }
 
 #cgi-load-indicator .cgi-dot {
