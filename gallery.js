@@ -12,6 +12,21 @@ if (document.querySelector('.photonic-smug-stream, .photonic-level-2-container, 
   document.body.classList.add('cgi-gallery-page');
 }
 
+(function() {
+  var revealed = false;
+  function cgiRevealStream() {
+    if (revealed) return;
+    revealed = true;
+    var el = document.querySelector('.photonic-smug-stream, .photonic-stream');
+    if (el) el.classList.add('cgi-ready');
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(cgiRevealStream, 150); });
+  } else {
+    setTimeout(cgiRevealStream, 150);
+  }
+})();
+
 function cgiMarkImgLoaded(img) {
   img.classList.add('cgi-img-loaded');
   var thumb = img.closest('.photonic-level-2.photonic-thumb');
@@ -23,12 +38,26 @@ function cgiGetLoadIndicator() {
   if (el) return el;
   el = document.createElement('div');
   el.id = 'cgi-load-indicator';
-  el.innerHTML = '<span class="cgi-dot"></span><span class="cgi-dot"></span><span class="cgi-dot"></span><span>Loading more</span>';
+  el.innerHTML = '<span class="cgi-dot"></span><span class="cgi-dot"></span><span class="cgi-dot"></span><span class="cgi-load-text">Loading more</span>';
   document.body.appendChild(el);
   return el;
 }
-function cgiShowLoadIndicator() { cgiGetLoadIndicator().classList.add('cgi-visible'); }
+window.cgiLoadIndicatorShowTimer = null;
+function cgiShowLoadIndicator(text) {
+  var el = cgiGetLoadIndicator();
+  var textEl = el.querySelector('.cgi-load-text');
+  if (textEl) textEl.textContent = text || 'Loading more';
+  if (window.cgiLoadIndicatorShowTimer) return;
+  window.cgiLoadIndicatorShowTimer = setTimeout(function() {
+    window.cgiLoadIndicatorShowTimer = null;
+    el.classList.add('cgi-visible');
+  }, 220);
+}
 function cgiHideLoadIndicator() {
+  if (window.cgiLoadIndicatorShowTimer) {
+    clearTimeout(window.cgiLoadIndicatorShowTimer);
+    window.cgiLoadIndicatorShowTimer = null;
+  }
   var el = document.getElementById('cgi-load-indicator');
   if (el) el.classList.remove('cgi-visible');
 }
@@ -193,7 +222,10 @@ window.cgiFixGallery = function() {
   if (cgiIsAlbumPage()) return;
   var isMobile = window.innerWidth < 768;
   var container = document.querySelector('.photonic-level-2-container');
-  if (container) container.style.cssText = 'display:grid!important;grid-template-columns:' + (isMobile ? '1fr 1fr' : '1fr 1fr 1fr') + ';gap:' + (isMobile ? '8px' : '10px') + ';columns:unset;column-count:unset;width:100%;box-sizing:border-box;';
+  if (container) {
+    container.style.cssText = 'display:grid!important;grid-template-columns:' + (isMobile ? '1fr 1fr' : '1fr 1fr 1fr') + ';gap:' + (isMobile ? '8px' : '10px') + ';columns:unset;column-count:unset;width:100%;box-sizing:border-box;';
+    container.classList.add('cgi-grid-ready');
+  }
   document.querySelectorAll('.photonic-level-2.photonic-thumb').forEach(function(thumb) {
     if (!thumb.dataset.cgiLinkFixed) {
       thumb.dataset.cgiLinkFixed = '1';
@@ -598,6 +630,7 @@ function cgiWireDownloadMenu(btn, menu) {
     if (open) setTimeout(function() { document.addEventListener('click', onDocClick); }, 0);
     else document.removeEventListener('click', onDocClick);
   });
+  return close;
 }
 
 function cgiSharePhotoUrl(url) {
@@ -942,6 +975,7 @@ function cgiBuildTopBar() {
 
   var dlMenu = document.createElement('div');
   dlMenu.className = 'cgi-dl-menu';
+  var closeDlMenu = cgiWireDownloadMenu(dlBtn, dlMenu);
   function mkMenuItem(label, code) {
     var a = document.createElement('a');
     a.href = '#';
@@ -949,13 +983,13 @@ function cgiBuildTopBar() {
     a.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
+      closeDlMenu();
       cgiBatchDownload(code, label.indexOf('Full') > -1 ? 'Full' : 'Web');
     });
     return a;
   }
   dlMenu.appendChild(mkMenuItem('Web Size', 'L'));
   dlMenu.appendChild(mkMenuItem('Full Size', '5K'));
-  cgiWireDownloadMenu(dlBtn, dlMenu);
 
   dlWrap.appendChild(dlBtn);
   dlWrap.appendChild(dlMenu);
@@ -1224,12 +1258,15 @@ function cgiBatchDownload(code, label) {
   input.value = JSON.stringify({ items: payloadItems, zipName: 'CGI-' + label + '-Photos.zip' });
   form.appendChild(input);
   window.cgiSuppressObserver = (window.cgiSuppressObserver || 0) + 1;
+  cgiShowLoadIndicator('Preparing download…');
   document.body.appendChild(form);
   form.submit();
   setTimeout(function() {
     if (form.parentNode) form.parentNode.removeChild(form);
     window.cgiSuppressObserver = Math.max(0, (window.cgiSuppressObserver || 0) - 1);
   }, 2000);
+  var waitMs = Math.min(1500 + items.length * 350, 9000);
+  setTimeout(cgiHideLoadIndicator, waitMs);
 }
 
 window.addEventListener('resize', window.cgiMasonryLayout);
