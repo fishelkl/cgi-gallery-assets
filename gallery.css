@@ -593,6 +593,10 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
    LIGHTBOX - Download / Share icons (overlaid on the image)
    ===================== */
 
+#photonic-social {
+  display: none !important;
+}
+
 #cgi-dl {
   position: fixed;
   top: 20px;
@@ -600,7 +604,17 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
   z-index: 99999;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+#cgi-dl .cgi-icon-btn {
+  width: 54px;
+  height: 54px;
+}
+
+#cgi-dl .cgi-icon-btn svg {
+  width: 25px;
+  height: 25px;
 }
 
 /* =====================
@@ -875,6 +889,16 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   #cgi-dl .cgi-dl-menu {
     top: auto !important;
     bottom: 50px !important;
+  }
+
+  #cgi-dl .cgi-icon-btn {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  #cgi-dl .cgi-icon-btn svg {
+    width: 26px !important;
+    height: 26px !important;
   }
 
   #cgi-button-row {
