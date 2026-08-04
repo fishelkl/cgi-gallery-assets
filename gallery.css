@@ -752,6 +752,7 @@ a.photonic-more-button.photonic-more-dynamic:hover {
    ===================== */
 
 #gallery-search-wrap {
+  position: relative !important;
   width: 100% !important;
   margin-bottom: 14px !important;
   box-sizing: border-box !important;
@@ -778,6 +779,70 @@ a.photonic-more-button.photonic-more-dynamic:hover {
 
 #gallery-search:focus {
   box-shadow: 0 0 0 3px rgba(45,89,134,0.2) !important;
+}
+
+#gallery-search-results {
+  display: none;
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 250 !important;
+  background: #fff !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
+  max-height: 420px !important;
+  overflow-y: auto !important;
+  padding: 6px !important;
+  box-sizing: border-box !important;
+}
+
+#gallery-search-results.cgi-visible {
+  display: block !important;
+}
+
+.cgi-search-result-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 8px 10px !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
+}
+
+.cgi-search-result-row:hover {
+  background: #f0f4f8 !important;
+}
+
+.cgi-search-result-row img {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 6px !important;
+  object-fit: cover !important;
+  flex: none !important;
+  display: block !important;
+}
+
+.cgi-search-result-row span {
+  font-family: 'Teko', sans-serif !important;
+  font-size: 19px !important;
+  letter-spacing: 0.5px !important;
+  color: #2d5986 !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cgi-search-empty {
+  font-family: 'Teko', sans-serif !important;
+  font-size: 17px !important;
+  letter-spacing: 0.5px !important;
+  color: rgba(45,89,134,0.6) !important;
+  padding: 12px 10px !important;
+  text-align: center !important;
 }
 
 /* =====================
