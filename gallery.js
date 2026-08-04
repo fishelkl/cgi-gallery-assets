@@ -471,12 +471,35 @@ function cgiHandleLoadMoreClick(container, btn) {
   }
 }
 
+function cgiApplyAlbumDateSort(container) {
+  cgiFetchAlbumLinks().then(function(albumLinks) {
+    var dateByAlbumId = {};
+    albumLinks.forEach(function(a) { if (a.date) dateByAlbumId[a.albumId] = a.date; });
+    var hasAnyDate = window.cgiAlbumOrder.some(function(t) {
+      var id = t.getAttribute('data-cgi-album-id');
+      return id && dateByAlbumId[id];
+    });
+    if (!hasAnyDate) return;
+    window.cgiAlbumOrder.sort(function(a, b) {
+      var da = dateByAlbumId[a.getAttribute('data-cgi-album-id')];
+      var db = dateByAlbumId[b.getAttribute('data-cgi-album-id')];
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return new Date(db) - new Date(da);
+    });
+    cgiRenderAlbumOrder(container);
+    cgiUpdateVisibility();
+  }).catch(function() {});
+}
+
 function cgiInsertLoadMoreButton() {
   if (cgiIsAlbumPage()) return true;
   if (document.getElementById('cgi-load-more')) return true;
   var container = document.querySelector('.photonic-level-2-container');
   if (!container) return false;
   cgiEnsureAlbumOrderInit(container);
+  cgiApplyAlbumDateSort(container);
   var btn = document.createElement('a');
   btn.id = 'cgi-load-more';
   btn.href = '#';
