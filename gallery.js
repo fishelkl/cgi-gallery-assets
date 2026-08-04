@@ -74,13 +74,10 @@ function cgiRenderAlbumOrder(container) {
   display.forEach(function(t) { container.appendChild(t); });
 }
 
-window.cgiSearchTerms = [];
-
 function cgiUpdateVisibility() {
   var year = document.getElementById('filter-year') ? document.getElementById('filter-year').value : 'all';
   var division = document.getElementById('filter-division') ? document.getElementById('filter-division').value : 'all';
   var week = document.getElementById('filter-week') ? document.getElementById('filter-week').value : 'all';
-  var searchTerms = window.cgiSearchTerms;
   var shown = 0;
   document.querySelectorAll('.photonic-level-2.photonic-thumb').forEach(function(thumb) {
     var desc = thumb.querySelector('.custom-desc');
@@ -90,9 +87,7 @@ function cgiUpdateVisibility() {
     var yearMatch = year === 'all' || src.indexOf('/' + year + '/') > -1;
     var divMatch = division === 'all' || text.indexOf(division) > -1;
     var weekMatch = week === 'all' || text.indexOf(week) > -1;
-    var title = (thumb.getAttribute('data-cgi-title') || '').toLowerCase();
-    var searchMatch = !searchTerms.length || searchTerms.every(function(term) { return title.indexOf(term) > -1; });
-    var filterMatch = yearMatch && divMatch && weekMatch && searchMatch;
+    var filterMatch = yearMatch && divMatch && weekMatch;
     if (filterMatch && shown < window.cgiVisibleCount) {
       thumb.style.display = 'block';
       shown++;
@@ -107,6 +102,99 @@ function cgiUpdateVisibility() {
     var moreAvailable = total > window.cgiVisibleCount || !!container.getAttribute('data-photonic-query');
     btn.style.display = moreAvailable ? '' : 'none';
   }
+}
+
+window.cgiHebrewYearByAlbumId = {};
+window.cgiHebrewYearsComputed = false;
+function cgiComputeHebrewYears() {
+  if (window.cgiHebrewYearsComputed) return;
+  window.cgiHebrewYearsComputed = true;
+  cgiFetchAlbumLinks().then(function(albumLinks) {
+    albumLinks.forEach(function(a) {
+      if (!a.date) return;
+      try {
+        var d = new Date(a.date);
+        if (isNaN(d.getTime())) return;
+        var parts = new Intl.DateTimeFormat('en-u-ca-hebrew', { year: 'numeric' }).formatToParts(d);
+        var yearPart = parts.find(function(p) { return p.type === 'year'; });
+        if (yearPart) window.cgiHebrewYearByAlbumId[a.albumId] = yearPart.value.replace(/\D/g, '');
+      } catch (e) {}
+    });
+  }).catch(function() {});
+}
+
+function cgiBuildSearchIndex(thumb) {
+  if (thumb.dataset.cgiSearchIndex) return thumb.dataset.cgiSearchIndex;
+  var title = thumb.getAttribute('data-cgi-title') || '';
+  var desc = thumb.querySelector('.custom-desc');
+  var descText = desc ? desc.textContent : '';
+  var week = thumb.getAttribute('data-cgi-week') || '';
+  var img = thumb.querySelector('img');
+  var src = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
+  var ym = src.match(/\/(\d{4})\//);
+  var year = ym ? ym[1] : '';
+  var albumId = thumb.getAttribute('data-cgi-album-id');
+  var hebrewYear = albumId ? (window.cgiHebrewYearByAlbumId[albumId] || '') : '';
+  var index = [title, descText, week ? ('week ' + week) : '', year, hebrewYear].join(' ').toLowerCase();
+  thumb.dataset.cgiSearchIndex = index;
+  return index;
+}
+
+function cgiTermMatches(index, term) {
+  var escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  var pattern = /^\d+$/.test(term) ? ('\\b' + escaped + '\\b') : ('\\b' + escaped);
+  return new RegExp(pattern, 'i').test(index);
+}
+
+function cgiRenderSearchResults(terms) {
+  var dropdown = document.getElementById('gallery-search-results');
+  if (!dropdown) return;
+  if (!terms.length) {
+    dropdown.classList.remove('cgi-visible');
+    dropdown.innerHTML = '';
+    return;
+  }
+  var thumbs = Array.from(document.querySelectorAll('.photonic-level-2.photonic-thumb'));
+  var matches = thumbs.filter(function(thumb) {
+    var index = cgiBuildSearchIndex(thumb);
+    return terms.every(function(term) { return cgiTermMatches(index, term); });
+  }).slice(0, 20);
+
+  dropdown.innerHTML = '';
+  if (!matches.length) {
+    var empty = document.createElement('div');
+    empty.className = 'cgi-search-empty';
+    empty.textContent = 'No galleries found';
+    dropdown.appendChild(empty);
+  } else {
+    matches.forEach(function(thumb) {
+      var img = thumb.querySelector('img');
+      var src = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
+      var title = thumb.getAttribute('data-cgi-title') || '';
+      var row = document.createElement('a');
+      row.href = '#';
+      row.className = 'cgi-search-result-row';
+      if (src) {
+        var thumbImg = document.createElement('img');
+        thumbImg.src = cgiSizedUrl(src, 'Th');
+        thumbImg.alt = '';
+        row.appendChild(thumbImg);
+      }
+      var titleSpan = document.createElement('span');
+      titleSpan.textContent = title;
+      row.appendChild(titleSpan);
+      row.addEventListener('click', function(e) {
+        e.preventDefault();
+        var link = thumb.querySelector('a');
+        var href = link ? (link.getAttribute('href') || '') : '';
+        cgiResolveThumbLink(thumb, href).then(function(finalUrl) {
+          window.location.href = finalUrl;
+        });
+      });
+      dropdown.appendChild(row);
+    });
+  }
+  dropdown.classList.add('cgi-visible');
 }
 
 function cgiInsertFilters() {
@@ -131,15 +219,24 @@ function cgiInsertFilters() {
   var searchInput = document.createElement('input');
   searchInput.type = 'text';
   searchInput.id = 'gallery-search';
-  searchInput.placeholder = 'Search galleries by name…';
+  searchInput.placeholder = 'Search galleries by name, week, division, year…';
   searchInput.setAttribute('autocomplete', 'off');
+  var searchResults = document.createElement('div');
+  searchResults.id = 'gallery-search-results';
   searchInput.addEventListener('input', function() {
-    window.cgiSearchTerms = searchInput.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    window.cgiVisibleCount = 12;
-    window.cgiFilterGallery();
+    var terms = searchInput.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    cgiRenderSearchResults(terms);
+  });
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { searchInput.value = ''; cgiRenderSearchResults([]); searchInput.blur(); }
+  });
+  document.addEventListener('click', function(e) {
+    if (!searchWrap.contains(e.target)) cgiRenderSearchResults([]);
   });
   searchWrap.appendChild(searchInput);
+  searchWrap.appendChild(searchResults);
   stream.parentNode.insertBefore(searchWrap, stream);
+  cgiComputeHebrewYears();
 
   var filterDiv = document.createElement('div');
   filterDiv.id = 'gallery-filters';
