@@ -74,10 +74,13 @@ function cgiRenderAlbumOrder(container) {
   display.forEach(function(t) { container.appendChild(t); });
 }
 
+window.cgiSearchTerms = [];
+
 function cgiUpdateVisibility() {
   var year = document.getElementById('filter-year') ? document.getElementById('filter-year').value : 'all';
   var division = document.getElementById('filter-division') ? document.getElementById('filter-division').value : 'all';
   var week = document.getElementById('filter-week') ? document.getElementById('filter-week').value : 'all';
+  var searchTerms = window.cgiSearchTerms;
   var shown = 0;
   document.querySelectorAll('.photonic-level-2.photonic-thumb').forEach(function(thumb) {
     var desc = thumb.querySelector('.custom-desc');
@@ -87,7 +90,9 @@ function cgiUpdateVisibility() {
     var yearMatch = year === 'all' || src.indexOf('/' + year + '/') > -1;
     var divMatch = division === 'all' || text.indexOf(division) > -1;
     var weekMatch = week === 'all' || text.indexOf(week) > -1;
-    var filterMatch = yearMatch && divMatch && weekMatch;
+    var title = (thumb.getAttribute('data-cgi-title') || '').toLowerCase();
+    var searchMatch = !searchTerms.length || searchTerms.every(function(term) { return title.indexOf(term) > -1; });
+    var filterMatch = yearMatch && divMatch && weekMatch && searchMatch;
     if (filterMatch && shown < window.cgiVisibleCount) {
       thumb.style.display = 'block';
       shown++;
@@ -120,6 +125,21 @@ function cgiInsertFilters() {
     field.appendChild(el);
     return field;
   }
+
+  var searchWrap = document.createElement('div');
+  searchWrap.id = 'gallery-search-wrap';
+  var searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.id = 'gallery-search';
+  searchInput.placeholder = 'Search galleries by name…';
+  searchInput.setAttribute('autocomplete', 'off');
+  searchInput.addEventListener('input', function() {
+    window.cgiSearchTerms = searchInput.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    window.cgiVisibleCount = 12;
+    window.cgiFilterGallery();
+  });
+  searchWrap.appendChild(searchInput);
+  stream.parentNode.insertBefore(searchWrap, stream);
 
   var filterDiv = document.createElement('div');
   filterDiv.id = 'gallery-filters';
@@ -480,13 +500,13 @@ function cgiApplyAlbumDateSort(container) {
       return id && dateByAlbumId[id];
     });
     if (!hasAnyDate) return;
+    var now = Date.now();
     window.cgiAlbumOrder.sort(function(a, b) {
       var da = dateByAlbumId[a.getAttribute('data-cgi-album-id')];
       var db = dateByAlbumId[b.getAttribute('data-cgi-album-id')];
-      if (!da && !db) return 0;
-      if (!da) return 1;
-      if (!db) return -1;
-      return new Date(db) - new Date(da);
+      var ta = da ? new Date(da).getTime() : now;
+      var tb = db ? new Date(db).getTime() : now;
+      return tb - ta;
     });
     cgiRenderAlbumOrder(container);
     cgiUpdateVisibility();
