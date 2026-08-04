@@ -599,7 +599,7 @@ body.cgi-gallery-page .edgtf-content .edgtf-container-inner {
 
 #cgi-dl {
   position: fixed;
-  top: 20px;
+  top: 66px;
   right: 20px;
   z-index: 99999;
   display: flex;
@@ -745,6 +745,39 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   margin: 0 !important;
   overflow: hidden !important;
   pointer-events: none !important;
+}
+
+/* =====================
+   SEARCH BAR
+   ===================== */
+
+#gallery-search-wrap {
+  width: 100% !important;
+  margin-bottom: 14px !important;
+  box-sizing: border-box !important;
+}
+
+#gallery-search {
+  font-family: 'Teko', sans-serif !important;
+  font-size: 20px !important;
+  letter-spacing: 0.5px !important;
+  padding: 12px 18px !important;
+  border-radius: 10px !important;
+  border: 2px solid #2d5986 !important;
+  background: #fff !important;
+  color: #2d5986 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition: box-shadow 0.2s ease !important;
+}
+
+#gallery-search::placeholder {
+  color: rgba(45,89,134,0.55) !important;
+}
+
+#gallery-search:focus {
+  box-shadow: 0 0 0 3px rgba(45,89,134,0.2) !important;
 }
 
 /* =====================
