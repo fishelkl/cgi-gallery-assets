@@ -105,12 +105,14 @@ function cgiUpdateVisibility() {
 }
 
 window.cgiHebrewYearByAlbumId = {};
+window.cgiDescriptionByAlbumId = {};
 window.cgiHebrewYearsComputed = false;
 function cgiComputeHebrewYears() {
   if (window.cgiHebrewYearsComputed) return;
   window.cgiHebrewYearsComputed = true;
   cgiFetchAlbumLinks().then(function(albumLinks) {
     albumLinks.forEach(function(a) {
+      if (a.description) window.cgiDescriptionByAlbumId[a.albumId] = a.description;
       if (!a.date) return;
       try {
         var d = new Date(a.date);
@@ -135,7 +137,8 @@ function cgiBuildSearchIndex(thumb) {
   var year = ym ? ym[1] : '';
   var albumId = thumb.getAttribute('data-cgi-album-id');
   var hebrewYear = albumId ? (window.cgiHebrewYearByAlbumId[albumId] || '') : '';
-  var index = [title, descText, week ? ('week ' + week) : '', year, hebrewYear].join(' ').toLowerCase();
+  var description = albumId ? (window.cgiDescriptionByAlbumId[albumId] || '') : '';
+  var index = [title, descText, week ? ('week ' + week) : '', year, hebrewYear, description].join(' ').toLowerCase();
   thumb.dataset.cgiSearchIndex = index;
   return index;
 }
@@ -171,6 +174,10 @@ function cgiRenderSearchResults(terms) {
       var img = thumb.querySelector('img');
       var src = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
       var title = thumb.getAttribute('data-cgi-title') || '';
+      var descEl = thumb.querySelector('.custom-desc');
+      var divisionWeek = descEl ? descEl.textContent : '';
+      var ymMatch = src.match(/\/(\d{4})\//);
+      var subtitle = [divisionWeek, ymMatch ? ymMatch[1] : ''].filter(Boolean).join(' \xB7 ');
       var row = document.createElement('a');
       row.href = '#';
       row.className = 'cgi-search-result-row';
@@ -180,9 +187,19 @@ function cgiRenderSearchResults(terms) {
         thumbImg.alt = '';
         row.appendChild(thumbImg);
       }
+      var textWrap = document.createElement('span');
+      textWrap.className = 'cgi-search-result-text';
       var titleSpan = document.createElement('span');
+      titleSpan.className = 'cgi-search-result-title';
       titleSpan.textContent = title;
-      row.appendChild(titleSpan);
+      textWrap.appendChild(titleSpan);
+      if (subtitle) {
+        var subtitleSpan = document.createElement('span');
+        subtitleSpan.className = 'cgi-search-result-subtitle';
+        subtitleSpan.textContent = subtitle;
+        textWrap.appendChild(subtitleSpan);
+      }
+      row.appendChild(textWrap);
       row.addEventListener('click', function(e) {
         e.preventDefault();
         var link = thumb.querySelector('a');
