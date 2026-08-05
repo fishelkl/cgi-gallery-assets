@@ -958,6 +958,10 @@ function cgiApplyBannerDescription(description) {
   var holder = document.querySelector('.edgtf-title-holder');
   if (!holder || holder.querySelector('.cgi-banner-description')) return;
   window.cgiBannerDescriptionSet = true;
+  var divider = document.createElement('div');
+  divider.className = 'cgi-banner-description-divider';
+  divider.textContent = '●';
+  holder.appendChild(divider);
   var desc = document.createElement('div');
   desc.className = 'cgi-banner-description';
   desc.textContent = description;
