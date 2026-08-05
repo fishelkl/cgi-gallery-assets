@@ -951,6 +951,19 @@ function cgiApplyBannerDate(dateStr) {
   holder.appendChild(sub);
 }
 
+window.cgiBannerDescriptionSet = false;
+function cgiApplyBannerDescription(description) {
+  if (window.cgiBannerDescriptionSet) return;
+  if (!description) return;
+  var holder = document.querySelector('.edgtf-title-holder');
+  if (!holder || holder.querySelector('.cgi-banner-description')) return;
+  window.cgiBannerDescriptionSet = true;
+  var desc = document.createElement('div');
+  desc.className = 'cgi-banner-description';
+  desc.textContent = description;
+  holder.appendChild(desc);
+}
+
 function cgiApplyBannerDateFallback() {
   var parts = window.location.pathname.split('/').filter(Boolean);
   var slug = parts[parts.length - 1];
@@ -976,13 +989,15 @@ function cgiApplyBannerImage() {
   if (!albumId) { cgiApplyBannerDateFallback(); return; }
 
   cgiFetchAlbumLinks().then(function(albumLinks) {
-    if (window.cgiBannerDateSet) return;
     var entry = albumLinks.find(function(a) { return a.albumId === albumId; });
-    if (entry && entry.date) {
-      cgiApplyBannerDate(entry.date);
-    } else {
-      cgiApplyBannerDateFallback();
+    if (!window.cgiBannerDateSet) {
+      if (entry && entry.date) {
+        cgiApplyBannerDate(entry.date);
+      } else {
+        cgiApplyBannerDateFallback();
+      }
     }
+    if (entry && entry.description) cgiApplyBannerDescription(entry.description);
   }).catch(function() {
     cgiApplyBannerDateFallback();
   });
