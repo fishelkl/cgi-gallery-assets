@@ -825,12 +825,32 @@ a.photonic-more-button.photonic-more-dynamic:hover {
   display: block !important;
 }
 
-.cgi-search-result-row span {
+.cgi-search-result-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.cgi-search-result-title {
   font-family: 'Teko', sans-serif !important;
   font-size: 19px !important;
   letter-spacing: 0.5px !important;
   color: #2d5986 !important;
   line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cgi-search-result-subtitle {
+  font-family: 'Teko', sans-serif !important;
+  font-size: 13px !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  color: rgba(45,89,134,0.6) !important;
+  line-height: 1.1 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
