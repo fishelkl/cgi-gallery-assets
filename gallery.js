@@ -739,12 +739,12 @@ window.cgiMasonryLayout = function() {
 };
 
 function cgiSizedUrl(src, code) {
-  return src.replace(/\/[A-Z0-9]+\/([^\/]+)-[A-Z0-9]+\.jpg$/i, '/' + code + '/$1-' + code + '.jpg');
+  return src.replace(/\/[A-Z0-9]+\/([^\/]+)-[A-Z0-9]+\.([a-zA-Z0-9]+)$/, '/' + code + '/$1-' + code + '.$2');
 }
 
 function cgiOriginalFilename(src) {
-  var m = src.match(/\/([^\/]+)-[A-Z0-9]+\.jpg$/i);
-  return m ? m[1] + '.jpg' : 'photo.jpg';
+  var m = src.match(/\/([^\/]+)-[A-Z0-9]+\.([a-zA-Z0-9]+)$/);
+  return m ? m[1] + '.' + m[2] : 'photo.jpg';
 }
 
 function cgiProxyUrl(url, filename) {
