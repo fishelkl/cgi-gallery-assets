@@ -324,13 +324,22 @@ function cgiInsertNewestCarousel() {
       var target = offset + direction * cardStep();
       if (target < 0) target = mo;
       if (target > mo) target = 0;
-      offset = target;
-      track.style.transition = 'transform 0.85s cubic-bezier(0.65, 0, 0.35, 1)';
+
+      // Commit the current position with transitions off first, force a reflow,
+      // THEN enable the transition and set the new value on the next line.
+      // Without the forced reflow, browsers can batch both style writes into a
+      // single recalculation and skip the animation entirely (jumps instantly).
+      track.style.transition = 'none';
       track.style.transform = 'translateX(-' + offset + 'px)';
+      void track.offsetWidth;
+      track.style.transition = 'transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
+      offset = target;
+      track.style.transform = 'translateX(-' + offset + 'px)';
+
       clearTimeout(track._cgiTransitionResetTimer);
       track._cgiTransitionResetTimer = setTimeout(function() {
         track.style.transition = 'none';
-      }, 900);
+      }, 500);
     }
 
     var prevBtn = document.createElement('button');
