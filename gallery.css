@@ -6,21 +6,29 @@
 
 #cgi-newest-carousel-wrap {
   width: 100% !important;
-  max-width: 1200px !important;
+  max-width: 1700px !important;
   margin: 0 auto !important;
-  padding: 50px 20px !important;
+  padding: 65px 40px !important;
   box-sizing: border-box !important;
+  opacity: 0 !important;
+  transform: translateY(28px) !important;
+  transition: opacity 1.3s ease, transform 1.3s ease !important;
+}
+
+#cgi-newest-carousel-wrap.cgi-carousel-visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
 .cgi-carousel-heading {
   font-family: 'Teko', sans-serif !important;
-  font-size: 42px !important;
+  font-size: 54px !important;
   font-weight: 600 !important;
   letter-spacing: 2px !important;
   text-transform: uppercase !important;
   color: #2d5986 !important;
   text-align: center !important;
-  margin: 0 0 24px 0 !important;
+  margin: 0 0 30px 0 !important;
 }
 
 .cgi-carousel-track-wrap {
@@ -29,11 +37,11 @@
 
 .cgi-carousel-track {
   display: flex !important;
-  gap: 16px !important;
+  gap: 22px !important;
   overflow-x: auto !important;
   scroll-snap-type: x proximity !important;
   scroll-behavior: smooth !important;
-  padding: 4px 4px 12px !important;
+  padding: 4px 4px 16px !important;
   margin: 0 !important;
   list-style: none !important;
   -webkit-overflow-scrolling: touch !important;
@@ -42,21 +50,22 @@
 
 .cgi-carousel-card {
   flex: none !important;
-  width: 260px !important;
+  width: 360px !important;
   scroll-snap-align: start !important;
-  border-radius: 10px !important;
+  border-radius: 14px !important;
   overflow: hidden !important;
   position: relative !important;
   display: block !important;
   text-decoration: none !important;
   aspect-ratio: 4 / 3 !important;
   background: #1c1c1c !important;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important;
-  transition: transform 0.25s ease !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18) !important;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease !important;
 }
 
 .cgi-carousel-card:hover {
-  transform: translateY(-4px) !important;
+  transform: translateY(-6px) scale(1.015) !important;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.28) !important;
 }
 
 .cgi-carousel-card img {
@@ -64,6 +73,11 @@
   height: 100% !important;
   object-fit: cover !important;
   display: block !important;
+  transition: transform 0.6s ease !important;
+}
+
+.cgi-carousel-card:hover img {
+  transform: scale(1.06) !important;
 }
 
 .cgi-carousel-card-title {
@@ -71,11 +85,11 @@
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  padding: 30px 14px 12px !important;
+  padding: 40px 18px 16px !important;
   background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
   color: #fff !important;
   font-family: 'Teko', sans-serif !important;
-  font-size: 20px !important;
+  font-size: 25px !important;
   font-weight: 600 !important;
   letter-spacing: 1px !important;
   text-transform: uppercase !important;
@@ -89,41 +103,46 @@
   position: absolute !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
-  width: 44px !important;
-  height: 44px !important;
+  width: 52px !important;
+  height: 52px !important;
   border-radius: 50% !important;
   border: none !important;
   background: #2d5986 !important;
   color: #fff !important;
-  font-size: 16px !important;
+  font-size: 18px !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
   z-index: 5 !important;
-  transition: background 0.25s ease !important;
+  transition: background 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 .cgi-carousel-arrow:hover {
   background: #1c3a55 !important;
+  transform: translateY(-50%) scale(1.1) !important;
+}
+
+.cgi-carousel-arrow:active {
+  transform: translateY(-50%) scale(0.92) !important;
 }
 
 .cgi-carousel-prev {
-  left: -8px !important;
+  left: -14px !important;
 }
 
 .cgi-carousel-next {
-  right: -8px !important;
+  right: -14px !important;
 }
 
 @media (max-width: 768px) {
   .cgi-carousel-heading {
-    font-size: 32px !important;
+    font-size: 36px !important;
   }
 
   .cgi-carousel-card {
-    width: 200px !important;
+    width: 220px !important;
   }
 
   .cgi-carousel-arrow {

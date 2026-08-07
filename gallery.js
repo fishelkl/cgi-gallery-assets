@@ -214,6 +214,25 @@ function cgiRenderSearchResults(terms) {
   dropdown.classList.add('cgi-visible');
 }
 
+function cgiEasedScrollTo(el, targetLeft, duration) {
+  if (el._cgiScrollRAF) cancelAnimationFrame(el._cgiScrollRAF);
+  var startLeft = el.scrollLeft;
+  var change = targetLeft - startLeft;
+  var startTime = null;
+  function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function step(timestamp) {
+    if (!startTime) startTime = timestamp;
+    var progress = Math.min((timestamp - startTime) / duration, 1);
+    el.scrollLeft = startLeft + change * easeInOutCubic(progress);
+    if (progress < 1) {
+      el._cgiScrollRAF = requestAnimationFrame(step);
+    } else {
+      el._cgiScrollRAF = null;
+    }
+  }
+  el._cgiScrollRAF = requestAnimationFrame(step);
+}
+
 function cgiInsertNewestCarousel() {
   if (!document.body.classList.contains('home')) return;
   if (document.getElementById('cgi-newest-carousel-wrap')) return;
@@ -262,25 +281,83 @@ function cgiInsertNewestCarousel() {
 
     trackWrap.appendChild(track);
 
+    function cardStep() {
+      var card = track.querySelector('.cgi-carousel-card');
+      var cardWidth = card ? card.getBoundingClientRect().width : 340;
+      var gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || 20) || 20;
+      return cardWidth + gap;
+    }
+
+    var isPaused = false;
+    var resumeTimer = null;
+    var autoplayTimer = null;
+    var AUTOPLAY_DELAY = 4800;
+    var SCROLL_DURATION = 1000;
+
+    function maxScroll() { return track.scrollWidth - track.clientWidth; }
+
+    function scrollToNext() {
+      var m = maxScroll();
+      if (m <= 2) return;
+      var target = track.scrollLeft + cardStep();
+      if (target >= m - 5) target = 0;
+      cgiEasedScrollTo(track, target, SCROLL_DURATION);
+    }
+
+    function scrollToPrev() {
+      var m = maxScroll();
+      if (m <= 2) return;
+      var target = track.scrollLeft - cardStep();
+      if (target <= 5) target = m;
+      cgiEasedScrollTo(track, target, SCROLL_DURATION);
+    }
+
+    function startAutoplay() {
+      stopAutoplay();
+      autoplayTimer = setInterval(function() {
+        if (!isPaused) scrollToNext();
+      }, AUTOPLAY_DELAY);
+    }
+    function stopAutoplay() {
+      if (autoplayTimer) clearInterval(autoplayTimer);
+    }
+    function pauseThenResume() {
+      isPaused = true;
+      clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(function() { isPaused = false; }, 6000);
+    }
+
     var prevBtn = document.createElement('button');
     prevBtn.type = 'button';
     prevBtn.className = 'cgi-carousel-arrow cgi-carousel-prev';
     prevBtn.setAttribute('aria-label', 'Previous');
     prevBtn.innerHTML = '&#10094;';
-    prevBtn.addEventListener('click', function() { track.scrollBy({ left: -320, behavior: 'smooth' }); });
+    prevBtn.addEventListener('click', function() { pauseThenResume(); scrollToPrev(); });
 
     var nextBtn = document.createElement('button');
     nextBtn.type = 'button';
     nextBtn.className = 'cgi-carousel-arrow cgi-carousel-next';
     nextBtn.setAttribute('aria-label', 'Next');
     nextBtn.innerHTML = '&#10095;';
-    nextBtn.addEventListener('click', function() { track.scrollBy({ left: 320, behavior: 'smooth' }); });
+    nextBtn.addEventListener('click', function() { pauseThenResume(); scrollToNext(); });
 
     trackWrap.appendChild(prevBtn);
     trackWrap.appendChild(nextBtn);
     wrap.appendChild(trackWrap);
 
+    trackWrap.addEventListener('mouseenter', function() { isPaused = true; });
+    trackWrap.addEventListener('mouseleave', function() { isPaused = false; });
+    trackWrap.addEventListener('touchstart', function() { pauseThenResume(); }, { passive: true });
+
     current.parentNode.insertBefore(wrap, current.nextSibling);
+
+    startAutoplay();
+
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        wrap.classList.add('cgi-carousel-visible');
+      });
+    });
   }).catch(function() {});
 }
 
