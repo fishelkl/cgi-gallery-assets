@@ -214,6 +214,76 @@ function cgiRenderSearchResults(terms) {
   dropdown.classList.add('cgi-visible');
 }
 
+function cgiInsertNewestCarousel() {
+  if (!document.body.classList.contains('home')) return;
+  if (document.getElementById('cgi-newest-carousel-wrap')) return;
+  var anchor = document.querySelector('.elementor-element-69cae075');
+  if (!anchor || !anchor.parentNode) return;
+
+  cgiFetchAlbumLinks().then(function(albumLinks) {
+    if (document.getElementById('cgi-newest-carousel-wrap')) return;
+    var current = document.querySelector('.elementor-element-69cae075');
+    if (!current || !current.parentNode) return;
+
+    var dated = albumLinks.filter(function(a) { return a.date && a.title && a.cover; });
+    dated.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+    var top = dated.slice(0, 12);
+    if (!top.length) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'cgi-newest-carousel-wrap';
+
+    var heading = document.createElement('h2');
+    heading.className = 'cgi-carousel-heading';
+    heading.textContent = 'Latest From Camp';
+    wrap.appendChild(heading);
+
+    var trackWrap = document.createElement('div');
+    trackWrap.className = 'cgi-carousel-track-wrap';
+
+    var track = document.createElement('div');
+    track.className = 'cgi-carousel-track';
+
+    top.forEach(function(a) {
+      var card = document.createElement('a');
+      card.className = 'cgi-carousel-card';
+      card.href = a.link;
+      var img = document.createElement('img');
+      img.src = cgiSizedUrl(a.cover, 'L');
+      img.alt = a.title;
+      img.loading = 'lazy';
+      card.appendChild(img);
+      var titleEl = document.createElement('div');
+      titleEl.className = 'cgi-carousel-card-title';
+      titleEl.textContent = a.title;
+      card.appendChild(titleEl);
+      track.appendChild(card);
+    });
+
+    trackWrap.appendChild(track);
+
+    var prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
+    prevBtn.className = 'cgi-carousel-arrow cgi-carousel-prev';
+    prevBtn.setAttribute('aria-label', 'Previous');
+    prevBtn.innerHTML = '&#10094;';
+    prevBtn.addEventListener('click', function() { track.scrollBy({ left: -320, behavior: 'smooth' }); });
+
+    var nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'cgi-carousel-arrow cgi-carousel-next';
+    nextBtn.setAttribute('aria-label', 'Next');
+    nextBtn.innerHTML = '&#10095;';
+    nextBtn.addEventListener('click', function() { track.scrollBy({ left: 320, behavior: 'smooth' }); });
+
+    trackWrap.appendChild(prevBtn);
+    trackWrap.appendChild(nextBtn);
+    wrap.appendChild(trackWrap);
+
+    current.parentNode.insertBefore(wrap, current.nextSibling);
+  }).catch(function() {});
+}
+
 function cgiInsertFilters() {
   if (cgiIsAlbumPage()) return true;
   if (document.getElementById('gallery-filters')) return true;
@@ -1479,6 +1549,7 @@ function cgiRunAllFixes() {
     cgiInsertFilters();
     cgiInsertLoadMoreButton();
     cgiUpdateVisibility();
+    cgiInsertNewestCarousel();
   }
 }
 
