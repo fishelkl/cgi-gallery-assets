@@ -214,25 +214,6 @@ function cgiRenderSearchResults(terms) {
   dropdown.classList.add('cgi-visible');
 }
 
-function cgiEasedScrollTo(el, targetLeft, duration) {
-  if (el._cgiScrollRAF) cancelAnimationFrame(el._cgiScrollRAF);
-  var startLeft = el.scrollLeft;
-  var change = targetLeft - startLeft;
-  var startTime = null;
-  function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
-  function step(timestamp) {
-    if (!startTime) startTime = timestamp;
-    var progress = Math.min((timestamp - startTime) / duration, 1);
-    el.scrollLeft = startLeft + change * easeInOutCubic(progress);
-    if (progress < 1) {
-      el._cgiScrollRAF = requestAnimationFrame(step);
-    } else {
-      el._cgiScrollRAF = null;
-    }
-  }
-  el._cgiScrollRAF = requestAnimationFrame(step);
-}
-
 function cgiInsertNewestCarousel() {
   if (!document.body.classList.contains('home')) return;
   if (document.getElementById('cgi-newest-carousel-wrap')) return;
@@ -260,6 +241,9 @@ function cgiInsertNewestCarousel() {
     var trackWrap = document.createElement('div');
     trackWrap.className = 'cgi-carousel-track-wrap';
 
+    var viewport = document.createElement('div');
+    viewport.className = 'cgi-carousel-viewport';
+
     var track = document.createElement('div');
     track.className = 'cgi-carousel-track';
 
@@ -279,43 +263,56 @@ function cgiInsertNewestCarousel() {
       track.appendChild(card);
     });
 
-    trackWrap.appendChild(track);
+    viewport.appendChild(track);
+    trackWrap.appendChild(viewport);
+
+    // Index-based slide carousel driven entirely by CSS transform + transition,
+    // so it never fights the browser's native scroll/snap behavior.
+    var currentIndex = 0;
 
     function cardStep() {
       var card = track.querySelector('.cgi-carousel-card');
-      var cardWidth = card ? card.getBoundingClientRect().width : 340;
-      var gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || 20) || 20;
+      var cardWidth = card ? card.getBoundingClientRect().width : 360;
+      var styles = getComputedStyle(track);
+      var gap = parseFloat(styles.columnGap || styles.gap || 22) || 22;
       return cardWidth + gap;
+    }
+
+    function visibleCount() {
+      var step = cardStep();
+      return Math.max(1, Math.floor(viewport.clientWidth / step));
+    }
+
+    function maxIndex() {
+      return Math.max(0, top.length - visibleCount());
+    }
+
+    function applyTransform() {
+      var offset = currentIndex * cardStep();
+      track.style.transform = 'translateX(-' + offset + 'px)';
+    }
+
+    function goNext() {
+      var mi = maxIndex();
+      currentIndex = currentIndex >= mi ? 0 : currentIndex + 1;
+      applyTransform();
+    }
+
+    function goPrev() {
+      var mi = maxIndex();
+      currentIndex = currentIndex <= 0 ? mi : currentIndex - 1;
+      applyTransform();
     }
 
     var isPaused = false;
     var resumeTimer = null;
     var autoplayTimer = null;
-    var AUTOPLAY_DELAY = 4800;
-    var SCROLL_DURATION = 1000;
-
-    function maxScroll() { return track.scrollWidth - track.clientWidth; }
-
-    function scrollToNext() {
-      var m = maxScroll();
-      if (m <= 2) return;
-      var target = track.scrollLeft + cardStep();
-      if (target >= m - 5) target = 0;
-      cgiEasedScrollTo(track, target, SCROLL_DURATION);
-    }
-
-    function scrollToPrev() {
-      var m = maxScroll();
-      if (m <= 2) return;
-      var target = track.scrollLeft - cardStep();
-      if (target <= 5) target = m;
-      cgiEasedScrollTo(track, target, SCROLL_DURATION);
-    }
+    var AUTOPLAY_DELAY = 4200;
 
     function startAutoplay() {
       stopAutoplay();
       autoplayTimer = setInterval(function() {
-        if (!isPaused) scrollToNext();
+        if (!isPaused) goNext();
       }, AUTOPLAY_DELAY);
     }
     function stopAutoplay() {
@@ -332,14 +329,14 @@ function cgiInsertNewestCarousel() {
     prevBtn.className = 'cgi-carousel-arrow cgi-carousel-prev';
     prevBtn.setAttribute('aria-label', 'Previous');
     prevBtn.innerHTML = '&#10094;';
-    prevBtn.addEventListener('click', function() { pauseThenResume(); scrollToPrev(); });
+    prevBtn.addEventListener('click', function() { pauseThenResume(); goPrev(); });
 
     var nextBtn = document.createElement('button');
     nextBtn.type = 'button';
     nextBtn.className = 'cgi-carousel-arrow cgi-carousel-next';
     nextBtn.setAttribute('aria-label', 'Next');
     nextBtn.innerHTML = '&#10095;';
-    nextBtn.addEventListener('click', function() { pauseThenResume(); scrollToNext(); });
+    nextBtn.addEventListener('click', function() { pauseThenResume(); goNext(); });
 
     trackWrap.appendChild(prevBtn);
     trackWrap.appendChild(nextBtn);
@@ -347,11 +344,29 @@ function cgiInsertNewestCarousel() {
 
     trackWrap.addEventListener('mouseenter', function() { isPaused = true; });
     trackWrap.addEventListener('mouseleave', function() { isPaused = false; });
-    trackWrap.addEventListener('touchstart', function() { pauseThenResume(); }, { passive: true });
+
+    // basic touch swipe support since the track no longer scrolls natively
+    var touchStartX = null;
+    trackWrap.addEventListener('touchstart', function(e) {
+      pauseThenResume();
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    trackWrap.addEventListener('touchend', function(e) {
+      if (touchStartX === null) return;
+      var deltaX = e.changedTouches[0].clientX - touchStartX;
+      touchStartX = null;
+      if (deltaX > 40) goPrev();
+      else if (deltaX < -40) goNext();
+    }, { passive: true });
 
     current.parentNode.insertBefore(wrap, current.nextSibling);
 
     startAutoplay();
+
+    window.addEventListener('resize', function() {
+      currentIndex = Math.min(currentIndex, maxIndex());
+      applyTransform();
+    });
 
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
