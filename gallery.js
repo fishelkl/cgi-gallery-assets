@@ -251,24 +251,35 @@ function cgiInsertNewestCarousel() {
       var card = document.createElement('a');
       card.className = 'cgi-carousel-card';
       card.href = a.link;
+      var media = document.createElement('div');
+      media.className = 'cgi-carousel-card-media';
       var img = document.createElement('img');
       img.src = cgiSizedUrl(a.cover, 'L');
       img.alt = a.title;
       img.loading = 'lazy';
-      card.appendChild(img);
+      media.appendChild(img);
       var titleEl = document.createElement('div');
       titleEl.className = 'cgi-carousel-card-title';
       titleEl.textContent = a.title;
-      card.appendChild(titleEl);
+      media.appendChild(titleEl);
+      card.appendChild(media);
       track.appendChild(card);
     });
 
     viewport.appendChild(track);
     trackWrap.appendChild(viewport);
 
-    // Index-based slide carousel driven entirely by CSS transform + transition,
-    // so it never fights the browser's native scroll/snap behavior.
-    var currentIndex = 0;
+    // Two movement modes on the same transform, never both at once:
+    //  - continuous drift (autoplay): raw per-frame translateX, no CSS transition
+    //    (a real transition fighting per-frame updates is what caused the old "stiff/laggy" bug)
+    //  - discrete step (arrows): a single eased CSS transition by one card width
+    var offset = 0;
+    var DRIFT_SPEED = 32; // px/sec - slow constant crawl
+    var driftRAF = null;
+    var lastFrameTime = null;
+    var isPaused = false;
+    var isInView = false;
+    var resumeTimer = null;
 
     function cardStep() {
       var card = track.querySelector('.cgi-carousel-card');
@@ -278,50 +289,48 @@ function cgiInsertNewestCarousel() {
       return cardWidth + gap;
     }
 
-    function visibleCount() {
-      var step = cardStep();
-      return Math.max(1, Math.floor(viewport.clientWidth / step));
+    function maxOffset() {
+      return Math.max(0, track.scrollWidth - viewport.clientWidth);
     }
 
-    function maxIndex() {
-      return Math.max(0, top.length - visibleCount());
+    function driftFrame(timestamp) {
+      if (isPaused || !isInView) {
+        lastFrameTime = null;
+      } else {
+        if (lastFrameTime !== null) {
+          var dt = (timestamp - lastFrameTime) / 1000;
+          var mo = maxOffset();
+          if (mo > 2) {
+            offset += DRIFT_SPEED * dt;
+            if (offset >= mo) offset = 0;
+            track.style.transform = 'translateX(-' + offset + 'px)';
+          }
+        }
+        lastFrameTime = timestamp;
+      }
+      driftRAF = requestAnimationFrame(driftFrame);
     }
 
-    function applyTransform() {
-      var offset = currentIndex * cardStep();
-      track.style.transform = 'translateX(-' + offset + 'px)';
-    }
-
-    function goNext() {
-      var mi = maxIndex();
-      currentIndex = currentIndex >= mi ? 0 : currentIndex + 1;
-      applyTransform();
-    }
-
-    function goPrev() {
-      var mi = maxIndex();
-      currentIndex = currentIndex <= 0 ? mi : currentIndex - 1;
-      applyTransform();
-    }
-
-    var isPaused = false;
-    var resumeTimer = null;
-    var autoplayTimer = null;
-    var AUTOPLAY_DELAY = 4200;
-
-    function startAutoplay() {
-      stopAutoplay();
-      autoplayTimer = setInterval(function() {
-        if (!isPaused) goNext();
-      }, AUTOPLAY_DELAY);
-    }
-    function stopAutoplay() {
-      if (autoplayTimer) clearInterval(autoplayTimer);
-    }
     function pauseThenResume() {
       isPaused = true;
       clearTimeout(resumeTimer);
       resumeTimer = setTimeout(function() { isPaused = false; }, 6000);
+    }
+
+    function stepArrow(direction) {
+      pauseThenResume();
+      var mo = maxOffset();
+      if (mo <= 2) return;
+      var target = offset + direction * cardStep();
+      if (target < 0) target = mo;
+      if (target > mo) target = 0;
+      offset = target;
+      track.style.transition = 'transform 0.85s cubic-bezier(0.65, 0, 0.35, 1)';
+      track.style.transform = 'translateX(-' + offset + 'px)';
+      clearTimeout(track._cgiTransitionResetTimer);
+      track._cgiTransitionResetTimer = setTimeout(function() {
+        track.style.transition = 'none';
+      }, 900);
     }
 
     var prevBtn = document.createElement('button');
@@ -329,14 +338,14 @@ function cgiInsertNewestCarousel() {
     prevBtn.className = 'cgi-carousel-arrow cgi-carousel-prev';
     prevBtn.setAttribute('aria-label', 'Previous');
     prevBtn.innerHTML = '&#10094;';
-    prevBtn.addEventListener('click', function() { pauseThenResume(); goPrev(); });
+    prevBtn.addEventListener('click', function() { stepArrow(-1); });
 
     var nextBtn = document.createElement('button');
     nextBtn.type = 'button';
     nextBtn.className = 'cgi-carousel-arrow cgi-carousel-next';
     nextBtn.setAttribute('aria-label', 'Next');
     nextBtn.innerHTML = '&#10095;';
-    nextBtn.addEventListener('click', function() { pauseThenResume(); goNext(); });
+    nextBtn.addEventListener('click', function() { stepArrow(1); });
 
     trackWrap.appendChild(prevBtn);
     trackWrap.appendChild(nextBtn);
@@ -355,17 +364,31 @@ function cgiInsertNewestCarousel() {
       if (touchStartX === null) return;
       var deltaX = e.changedTouches[0].clientX - touchStartX;
       touchStartX = null;
-      if (deltaX > 40) goPrev();
-      else if (deltaX < -40) goNext();
+      if (deltaX > 40) stepArrow(-1);
+      else if (deltaX < -40) stepArrow(1);
     }, { passive: true });
 
     current.parentNode.insertBefore(wrap, current.nextSibling);
 
-    startAutoplay();
+    track.style.transition = 'none';
+    driftRAF = requestAnimationFrame(driftFrame);
+
+    // autoplay only runs once the carousel actually scrolls into view
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          isInView = entry.isIntersecting;
+        });
+      }, { threshold: 0.25 });
+      observer.observe(wrap);
+    } else {
+      isInView = true;
+    }
 
     window.addEventListener('resize', function() {
-      currentIndex = Math.min(currentIndex, maxIndex());
-      applyTransform();
+      var mo = maxOffset();
+      if (offset > mo) offset = mo;
+      track.style.transform = 'translateX(-' + offset + 'px)';
     });
 
     requestAnimationFrame(function() {
