@@ -324,22 +324,28 @@ function cgiInsertNewestCarousel() {
       var target = offset + direction * cardStep();
       if (target < 0) target = mo;
       if (target > mo) target = 0;
-
-      // Commit the current position with transitions off first, force a reflow,
-      // THEN enable the transition and set the new value on the next line.
-      // Without the forced reflow, browsers can batch both style writes into a
-      // single recalculation and skip the animation entirely (jumps instantly).
-      track.style.transition = 'none';
-      track.style.transform = 'translateX(-' + offset + 'px)';
-      void track.offsetWidth;
-      track.style.transition = 'transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
+      var startOffset = offset;
       offset = target;
-      track.style.transform = 'translateX(-' + offset + 'px)';
 
-      clearTimeout(track._cgiTransitionResetTimer);
-      track._cgiTransitionResetTimer = setTimeout(function() {
-        track.style.transition = 'none';
-      }, 500);
+      // Use the Web Animations API directly instead of toggling the CSS
+      // "transition" property. WAAPI always plays the animation regardless
+      // of how/when the JS sets things up, so there's no risk of the browser
+      // batching the before/after style writes into one paint and skipping
+      // the animation (which is what was happening with transition+reflow).
+      if (track._cgiAnim) track._cgiAnim.cancel();
+      var anim = track.animate(
+        [
+          { transform: 'translateX(-' + startOffset + 'px)' },
+          { transform: 'translateX(-' + target + 'px)' }
+        ],
+        { duration: 450, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' }
+      );
+      track._cgiAnim = anim;
+      anim.onfinish = function() {
+        track.style.transform = 'translateX(-' + target + 'px)';
+        anim.cancel();
+        track._cgiAnim = null;
+      };
     }
 
     var prevBtn = document.createElement('button');
