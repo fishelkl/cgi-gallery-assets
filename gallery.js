@@ -1152,6 +1152,22 @@ function cgiApplyBannerDate(dateStr) {
 }
 
 window.cgiBannerDescriptionSet = false;
+function cgiEscapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function cgiFormatBannerDescription(text) {
+  // Escape raw text FIRST (so any literal <, >, & in the description can't
+  // inject markup), THEN apply our own safe **bold** / newline handling on
+  // top of the already-escaped string.
+  var html = cgiEscapeHtml(text);
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
 function cgiApplyBannerDescription(description) {
   if (window.cgiBannerDescriptionSet) return;
   if (!description) return;
@@ -1164,7 +1180,7 @@ function cgiApplyBannerDescription(description) {
   holder.appendChild(divider);
   var desc = document.createElement('div');
   desc.className = 'cgi-banner-description';
-  desc.textContent = description;
+  desc.innerHTML = cgiFormatBannerDescription(description);
   holder.appendChild(desc);
 }
 
