@@ -465,9 +465,11 @@ html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-subtitle {
 }
 
 /* The theme forces <strong> to display:block (its "highlighted title word"
-   feature) - override that just within the description so **bold** text
-   stays inline instead of each bolded word landing on its own line. */
-.cgi-banner-description strong {
+   feature) via a high-specificity selector - match that specificity here so
+   **bold** text in the description stays inline instead of each bolded word
+   landing on its own line. */
+html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-description strong,
+html body .edgtf-title-holder .cgi-banner-description strong {
   display: inline !important;
   font-weight: 700 !important;
   color: #fff !important;
