@@ -464,6 +464,15 @@ html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-subtitle {
   text-align: center !important;
 }
 
+/* The theme forces <strong> to display:block (its "highlighted title word"
+   feature) - override that just within the description so **bold** text
+   stays inline instead of each bolded word landing on its own line. */
+.cgi-banner-description strong {
+  display: inline !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+}
+
 .cgi-banner-description-divider {
   font-size: 6px !important;
   color: rgba(255,255,255,0.55) !important;
