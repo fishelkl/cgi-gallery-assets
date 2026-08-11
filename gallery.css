@@ -472,7 +472,7 @@ html body .edgtf-title-holder.cgi-banner-has-image .cgi-banner-description stron
 html body .edgtf-title-holder .cgi-banner-description strong {
   display: inline !important;
   font-weight: 700 !important;
-  color: #fff !important;
+  color: inherit !important;
 }
 
 .cgi-banner-description-divider {
