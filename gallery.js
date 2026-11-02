@@ -8,24 +8,30 @@ function cgiIsAlbumPage() {
   return !!document.querySelector('.photonic-standard-layout:not(.photonic-level-2-container)');
 }
 
-if (document.querySelector('.photonic-smug-stream, .photonic-level-2-container, .photonic-standard-layout')) {
-  document.body.classList.add('cgi-gallery-page');
+function cgiMarkGalleryPage() {
+  if (!document.body || document.body.classList.contains('cgi-gallery-page')) return;
+  if (document.querySelector('.photonic-smug-stream, .photonic-level-2-container, .photonic-standard-layout')) {
+    document.body.classList.add('cgi-gallery-page');
+  }
 }
 
-(function() {
-  var revealed = false;
-  function cgiRevealStream() {
-    if (revealed) return;
-    revealed = true;
-    var el = document.querySelector('.photonic-smug-stream, .photonic-stream');
-    if (el) el.classList.add('cgi-ready');
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { setTimeout(cgiRevealStream, 150); });
-  } else {
-    setTimeout(cgiRevealStream, 150);
-  }
-})();
+// The CSS keeps galleries invisible until they get "cgi-ready". Photonic can
+// render its gallery after page load, so this is re-run whenever the page
+// changes (see cgiRunAllFixes) instead of only once, and reveals every gallery.
+function cgiRevealStream() {
+  document.querySelectorAll('.photonic-smug-stream:not(.cgi-ready), .photonic-stream:not(.cgi-ready)').forEach(function(el) {
+    el.classList.add('cgi-ready');
+  });
+}
+
+cgiMarkGalleryPage();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(cgiRevealStream, 150); });
+} else {
+  setTimeout(cgiRevealStream, 150);
+}
+// Safety net: never leave the gallery hidden for more than a few seconds.
+setTimeout(cgiRevealStream, 3000);
 
 function cgiMarkImgLoaded(img) {
   img.classList.add('cgi-img-loaded');
@@ -1681,6 +1687,8 @@ function cgiDedupeAlbumFigures() {
 }
 
 function cgiRunAllFixes() {
+  cgiMarkGalleryPage();
+  cgiRevealStream();
   if (cgiIsAlbumPage()) {
     cgiDedupeAlbumFigures();
     window.cgiMasonryLayout();
